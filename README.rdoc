@@ -1,17 +1,17 @@
-supercollider_sketchbook
+= supercollider_sketchbook
 ========================
 
-Collection of Supercollider Script
+A Private Collection of Supercollider Script
 
 * https://github.com/hellska/supercollider_sketchbook
 
 == Description
 
-This is a collection of script written for the SuperColllider server version 3.6.6
+This is a collection of script written for the SuperCollider starting at version 3.6.6
 
 == Feature/Problems
 
-This is a study repository without any warranty regards it's use and functionality
+This is a study repository without any warranty regards it's use and functionality.
 
 == LICENSE:
 
