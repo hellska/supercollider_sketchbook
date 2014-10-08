@@ -14,6 +14,7 @@ SynthDef.new(\particleSin, {
 	maxdt = 0.5,
 	dt = 0.3,
 	dtstart = 0.3,
+	pan = 0,
 	decay;
 	var source, out, env, dtline;
 	decay = dur * 3;
@@ -21,7 +22,7 @@ SynthDef.new(\particleSin, {
 	env = Env.perc(att, dur - att, amp);
 	source = (SinOsc.ar(freq) + SinOsc.ar(freq * (2**(tone1/12))) + SinOsc.ar(freq * (2**(tone2/12))) ) * EnvGen.kr(env);
 	out = source + CombC.ar(source, maxdt, dtline, decay);
-	out = Pan2.ar(out, 0);
+	out = Pan2.ar(out, pan);
 	DetectSilence.ar(out, doneAction: 2);
 	Out.ar(outBus, out)
 }).add;
@@ -39,6 +40,7 @@ SynthDef.new(\particleForm, {
 	maxdt = 0.5,
 	dt = 0.3,
 	dtstart = 0.3,
+	pan = 0,
 	decay = 3,
 	startb = -1,
 	endb = 1;
@@ -53,5 +55,6 @@ SynthDef.new(\particleForm, {
 }).add;
 )
 
-s.sendBundle(0.05, ["/s_new", "\particleForm" ,a = s.nextNodeID, 0, 1], ["/n_set", a, \outBus, 0, \dt, 0.001, \maxdt, 3, \dur, 23, \decay, 150, \startb, 1, \endb, -0.5]);
+// synth test
+s.sendBundle(0.05, ["/s_new", "\particleForm" ,a = s.nextNodeID, 0, 1], ["/n_set", a, \outBus, 0, \dt, 0.001, \maxdt, 3, \dur, 23, \decay, 12, \startb, 1, \endb, -0.5, \freq, 80]);
 s.sendBundle(0.05, ["/s_new", "\particleSin" ,a = s.nextNodeID, 0, 1], ["/n_set", a, \outBus, 0, \dt, 0.001, \maxdt, 3, \dur, 5, \freq, 60]);
