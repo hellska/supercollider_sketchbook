@@ -4,7 +4,7 @@ o = ServerOptions.new;
 o.memSize = 1048576;
 s = Server(\local, NetAddr("localhost", 57110), o);
 s.boot;
-
+s.meter;
 )
 
 (
