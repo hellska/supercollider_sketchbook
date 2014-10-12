@@ -1,18 +1,25 @@
-// NEXT STEP CONTROL RECORDING SAMPLE SEPARATELY FROM PLAY SAMPLE!!!!!!
-
-
-
-// first of all load all needed Bus ONLY ONCE
+// restart interpreter and quit server
+thisProcess.recompile;
+// boot the local server
+s.boot;
+// first of all load all needed Bus and variables ONLY ONCE
 (
-~input = Bus.audio(s, 1);
+~currentFolder = "date +\"%Y%m%d\"".unixCmdGetStdOutLines;
+~currentFolder = "~/x3dLooper/"++~currentFolder[0]++"/";
+if ( File.exists(~currentFolder.standardizePath) )
+{ ("Folder for sample record: "++~currentFolder).postln }
+{ "mkdir ~/x3dLooper/`date +\"%Y%m%d\"`".unixCmd } ;
+
 ~startPos = 0;
+~currentSampleNo = 0;
+~currentRecNo = 1;
+~input = Bus.audio(s, 1);
 ~recordBuff = Buffer.alloc(s, 65536);
 ~playBuff = Buffer.read(s, "~/x3dLooper/x3dL_default.aiff".standardizePath, 0);
 ~currentFile = "~/x3dLooper/x3dL_default.aiff";
-~recFile = "~/x3dLooper/x3dL_1.aiff";
-~stdHeader = "~/x3dLooper/x3dL_";
-~currentSampleNo = 0;
-~currentRecNo = 1;
+~recFile = ~currentFolder++"x3dL_1.aiff";
+~stdHeader = ~currentFolder++"x3dL_";
+
 ///)
 ///(
 // read input signal
@@ -22,7 +29,6 @@ SynthDef.new(\soundinMono, {arg inBus, outBus=0,amp=0.9;
 	out = source * amp;
 	Out.ar(outBus, out)
 }).send(s);
-
 // this will record to the disk
 SynthDef(\rec, {arg bufnum, inbus;
     DiskOut.ar(bufnum, In.ar(inbus,1));
@@ -36,10 +42,10 @@ SynthDef(\play, {| out = 0, bufnum, start = 0, loop = 0 |
 }).send(s);
 // recording soundin
 ~rec = {|filein, source|
-	i = Synth.new(\soundinMono, [\inBus, 0, \outBus, ~input]);
+	i = Synth.new(\soundinMono, [\inBus, source, \outBus, ~input]);
 	r = Buffer.alloc(s, 65536, 1);
 	r.write(filein.standardizePath, "aiff", "int16", 0, 0, true);
-	b = Synth.tail(nil,\rec, [\bufnum, r, \inbus, source]);
+	b = Synth.tail(nil,\rec, [\bufnum, r, \inbus, ~input]);
 };
 // stop recording soundin
 ~stop = {
@@ -76,7 +82,7 @@ OSCdef(\play, {|msg, time, addr, port|
 OSCdef(\rec, {|msg, time, addr, port|
 	if (msg[1]==1){
 		~recFile = ~stdHeader++~currentRecNo++".aiff";
-		~rec.value(~recFile, ~input);
+		~rec.value(~recFile, ~currentInputSource);
 		("Recording sample: "++~recFile).postln;
 		} {
 		~stop.value();
@@ -87,9 +93,28 @@ OSCdef(\rec, {|msg, time, addr, port|
 	'/jXcontrol/2'
 );
 OSCdef(\startPos, {|msg, time, addr, port|
-	~startPos = (msg[1] * ~playBuff.numFrames).floor.asInt },
+	switch (~currentSampleNo)
+		{0} { ~startPos = (msg[1] * ~playBuff.numFrames).floor.asInt }
+		{1} { ~startPos = (msg[1] * ~playBuff1.numFrames).floor.asInt }
+		{2} { ~startPos = (msg[1] * ~playBuff2.numFrames).floor.asInt }
+		{3} { ~startPos = (msg[1] * ~playBuff3.numFrames).floor.asInt }
+		{4} { ~startPos = (msg[1] * ~playBuff4.numFrames).floor.asInt }
+		{5} { ~startPos = (msg[1] * ~playBuff5.numFrames).floor.asInt }
+		{6} { ~startPos = (msg[1] * ~playBuff6.numFrames).floor.asInt };
+	},
 	'/jXcontrol/3'
 );
+OSCdef(\inputSource, {|msg, time, addr, port|
+	var sourceNo = (msg[1]*127).floor.postln;
+
+	if ((msg[1]*127).floor == 36)
+	{ ~currentInputSource = 0; ("Audio source selected: "++~currentInputSource).postln };
+	if ((msg[1]*127).floor == 108)
+	{ ~currentInputSource = 1; ("Audio source selected: "++~currentInputSource).postln };
+	},
+	'/jXcontrol/10'
+);
+
 ////////////////////////////////////
 // Functions and OSC def for Sample Selection
 ////////////////////////////////////
@@ -195,3 +220,10 @@ var sampleNo = 1;
 ~currentFile.postln;
 ~currentFile1.postln;
 
+File.exists("~/"++("date +\"%Y%m%d\"".unixCmdGetStdOut).standardizePath);
+"mkdir ~/`date +\"%Y%m%d\"`".unixCmd;
+~currentFolder = "date +\"%Y%m%d\"".unixCmdGetStdOutLines;
+~currentFolder = "~/"++~currentFolder[0]++"/";
+File.exists(~currentFolder.standardizePath);
+~currentFolder.postln
+File.exists("~/x3dLooper/".standardizePath);

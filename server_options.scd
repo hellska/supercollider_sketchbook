@@ -42,6 +42,7 @@ thisProcess.preferences
 Main.version.postln;
 thisProcess.openPorts.postln;
 )
+s.quit
 
 s.scope;
 s.meter;
