@@ -2,26 +2,41 @@
 thisProcess.recompile;
 // boot the local server
 s.boot;
-// first of all load all needed Bus and variables ONLY ONCE
+// first of all load all needed Bus and variables [[[ONLY ONCE]]]
 (
+///////// Global Variables
+~startup = true; // turn to false after startup
 ~currentFolder = "date +\"%Y%m%d\"".unixCmdGetStdOutLines;
 ~currentFolder = "~/x3dLooper/"++~currentFolder[0]++"/";
+~recFile = ~currentFolder++"x3dL_1.aiff";
+~stdHeader = ~currentFolder++"x3dL_";
+// check current folder and create a new one for each day session
 if ( File.exists(~currentFolder.standardizePath) )
 { ("Folder for sample record: "++~currentFolder).postln }
 { "mkdir ~/x3dLooper/`date +\"%Y%m%d\"`".unixCmd } ;
-
+// defines wich bus are used for audio input
+~inch1 = 0;
+~inch2 = 6;
+// other startup values
 ~startPos = 0;
+~panpot = 0;
 ~currentSampleNo = 0;
 ~currentRecNo = 1;
+///////// Audio Bus
 ~input = Bus.audio(s, 1);
+~sampleOut = Bus.audio(s, 2);
+~pitchBus = Bus.audio(s, 2);
+///////// Control Bus
+~pitchRatio = Bus.control(s, 1);
+///////// Buffers
 ~recordBuff = Buffer.alloc(s, 65536);
 ~playBuff = Buffer.read(s, "~/x3dLooper/x3dL_default.aiff".standardizePath, 0);
 ~currentFile = "~/x3dLooper/x3dL_default.aiff";
-~recFile = ~currentFolder++"x3dL_1.aiff";
-~stdHeader = ~currentFolder++"x3dL_";
-
-///)
-///(
+)
+(
+////////////////////////////////////
+// SynthDef Definition - \soundinMono, \rec, \play, \picthShifter, \mixer
+////////////////////////////////////
 // read input signal
 SynthDef.new(\soundinMono, {arg inBus, outBus=0,amp=0.9;
 	var source, out;
@@ -33,13 +48,29 @@ SynthDef.new(\soundinMono, {arg inBus, outBus=0,amp=0.9;
 SynthDef(\rec, {arg bufnum, inbus;
     DiskOut.ar(bufnum, In.ar(inbus,1));
 }).send(s);
-
-// this will play it back
-SynthDef(\play, {| out = 0, bufnum, start = 0, loop = 0 |
-	var source;
+// this will play it back mono file (default panpot center)
+SynthDef(\play, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0 |
+	var source, out;
 	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2);
-    Out.ar(out, source)
+	out = Pan2.ar(source, panpot);
+    Out.ar(outBus, out)
 }).send(s);
+// Very simple Pitch Shifter
+SynthDef.new(\picthShifter, {|inBus, outBus = 0, pshift, pRndVar = 0, trndVar = 0|
+	var source, out;
+	source = In.ar(inBus, 2);
+	out = PitchShift.ar(source, 0.2, pshift, pRndVar, trndVar);
+	Out.ar(outBus, out)
+}).send(s);
+// Otput Mixer for Al Samples
+SynthDef.new(\mixer, {|inBus, outBus = 0|
+	var source;
+	source = In.ar(inBus, 2);
+	Out.ar(outBus, source)
+}).send(s);
+////////////////////////////////////
+// Functions - ~play, ~rec, ~stop
+////////////////////////////////////
 // recording soundin
 ~rec = {|filein, source|
 	i = Synth.new(\soundinMono, [\inBus, source, \outBus, ~input]);
@@ -55,14 +86,14 @@ SynthDef(\play, {| out = 0, bufnum, start = 0, loop = 0 |
 	r.free;
 };
 ~play = {|buffer, startPos|
-	Synth.new(\play, [\bufnum, buffer, \start, startPos]);
+	Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut]);
 };
 // end of Synth Def
 ////////////////////////////////////
 // Actions trigger - play,rec,stop,samplePosition
 ////////////////////////////////////
 
-// Joystik controlled looper functions via OSc protocol
+// Joystik controlled looper functions via OSC protocol
 OSCdef(\play, {|msg, time, addr, port|
 	if (msg[1]==1) {
 //		~play.value(~playBuff, ~startPos);
@@ -74,11 +105,12 @@ OSCdef(\play, {|msg, time, addr, port|
 		{4} { ~play.value(~playBuff4, ~startPos) }
 		{5} { ~play.value(~playBuff5, ~startPos) }
 		{6} { ~play.value(~playBuff6, ~startPos) };
-		("play current sample: "++~currentFile).postln
+		// ("play current sample: "++~currentFile).postln
 	};
  },
 	'/jXcontrol/1'
 );
+// recording control
 OSCdef(\rec, {|msg, time, addr, port|
 	if (msg[1]==1){
 		~recFile = ~stdHeader++~currentRecNo++".aiff";
@@ -86,12 +118,13 @@ OSCdef(\rec, {|msg, time, addr, port|
 		("Recording sample: "++~recFile).postln;
 		} {
 		~stop.value();
-		"Stop Recording sample: ".postln;
+		("Stop Recording sample: "++~recFile).postln;
 		if (~currentRecNo<6) { ~currentRecNo = ~currentRecNo + 1 } { ~currentRecNo = 1 };
 	};
 	},
 	'/jXcontrol/2'
 );
+// Sample start Pos control
 OSCdef(\startPos, {|msg, time, addr, port|
 	switch (~currentSampleNo)
 		{0} { ~startPos = (msg[1] * ~playBuff.numFrames).floor.asInt }
@@ -104,17 +137,25 @@ OSCdef(\startPos, {|msg, time, addr, port|
 	},
 	'/jXcontrol/3'
 );
+// Sample panpot control
+OSCdef(\panpot, {|msg, time, addr, port|
+	~panpot = msg[1] * 2 - 1; // change range -1/1
+	}, '/jXcontrol/Xaxis'
+);
+// Pitch Shifter Mapping Function
+OSCdef(\pitch, {|msg, time, addr, port|
+	~pitchRatio.set(msg[1]*3.5+0.02);
+}, '/jXcontrol/Zrotation');
+// Bus selection for Sample Recording
 OSCdef(\inputSource, {|msg, time, addr, port|
 	var sourceNo = (msg[1]*127).floor.postln;
-
 	if ((msg[1]*127).floor == 36)
-	{ ~currentInputSource = 0; ("Audio source selected: "++~currentInputSource).postln };
+	{ ~currentInputSource = ~inch1; ("Audio source selected: "++~currentInputSource).postln };
 	if ((msg[1]*127).floor == 108)
-	{ ~currentInputSource = 1; ("Audio source selected: "++~currentInputSource).postln };
+	{ ~currentInputSource = ~inch2; ("Audio source selected: "++~currentInputSource).postln };
 	},
 	'/jXcontrol/10'
 );
-
 ////////////////////////////////////
 // Functions and OSC def for Sample Selection
 ////////////////////////////////////
@@ -128,12 +169,12 @@ OSCdef(\inputSource, {|msg, time, addr, port|
 		("SAMPLE NOT RECORDED YET! Selected default file: "++~currentFile).postln;
 	};
 	switch (sampleNo)
-		{1} {~playBuff1 = Buffer.read(s, ~currentFile.standardizePath) }
-		{2} {~playBuff2 = Buffer.read(s, ~currentFile.standardizePath) }
-		{3} {~playBuff3 = Buffer.read(s, ~currentFile.standardizePath) }
-		{4} {~playBuff4 = Buffer.read(s, ~currentFile.standardizePath) }
-		{5} {~playBuff5 = Buffer.read(s, ~currentFile.standardizePath) }
-		{6} {~playBuff6 = Buffer.read(s, ~currentFile.standardizePath) };
+		{1} {~playBuff1 = Buffer.read(s, ~currentFile.standardizePath).normalize }
+		{2} {~playBuff2 = Buffer.read(s, ~currentFile.standardizePath).normalize }
+		{3} {~playBuff3 = Buffer.read(s, ~currentFile.standardizePath).normalize }
+		{4} {~playBuff4 = Buffer.read(s, ~currentFile.standardizePath).normalize }
+		{5} {~playBuff5 = Buffer.read(s, ~currentFile.standardizePath).normalize }
+		{6} {~playBuff6 = Buffer.read(s, ~currentFile.standardizePath).normalize };
 	~currentSampleNo = sampleNo;
 };
 
@@ -179,51 +220,23 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 	} },
 	'/jXcontrol/9'
 );
+// perform startup on first clik and fx 1 on/off
+OSCdef(\fx1, {|msg, time, addr, port|
+	if (~startup) {
+		"Starting default Synths and values maping.......".postln;
+		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
+		~pitchshifter = Synth.new(\picthShifter, [\inBus, ~pitchBus, \pshift, 2.3], addAction: \addToTail);
+		~pitchshifter.map(\pshift, ~pitchRatio);
+		~startup = false;
+	} {
+		if (msg[1]==1) {
+			"FX 1 (pitch shifter) off!".postln;
+			~mixer.set(\outBus, 0);
+		} {
+			~mixer.set(\outBus, ~pitchBus);
+			"FX 1 (pitch shifter) on!".postln;
+		};
+	};
+}, '/jXcontrol/fx1');
 )
 
-
-////////////////////////////////////
-// Debug functions and manual testing
-////////////////////////////////////
-
-OSCdef.all.do({|in, idx| in.postln });
-OSCdef.freeAll;
-
-File.exists("~/x3dLooper/x3dL_2.aiff".standardizePath);
-
-s.queryAllNodes;
-
-// manual test
-~input = Bus.audio(s, ~input);
-~rec.value("~/x3dLooper/test1.aiff", ~input);
-~stop.value;
-~play.value("~/x3dLooper/test1.aiff");
-// OSC function to monitor input messages
-(
-OSCdef(\monitor, {|msg, time, addr, port|
-	("Current Value: "++msg[1]).postln;
-	("Current time: "++time).postln;
-	("Current addr: "++addr).postln;
-	("Current port: "++port).postln
-	},
-	'/jXcontrol/3'
-);
-)
-OSCdef(\monitor).disable;
-OSCdef(\monitor).enable;
-
-~startPos.postln;
-(
-var sampleNo = 1;
-~currentFile++sampleNo = ~stdHeader++sampleNo++".aiff";
-)
-~currentFile.postln;
-~currentFile1.postln;
-
-File.exists("~/"++("date +\"%Y%m%d\"".unixCmdGetStdOut).standardizePath);
-"mkdir ~/`date +\"%Y%m%d\"`".unixCmd;
-~currentFolder = "date +\"%Y%m%d\"".unixCmdGetStdOutLines;
-~currentFolder = "~/"++~currentFolder[0]++"/";
-File.exists(~currentFolder.standardizePath);
-~currentFolder.postln
-File.exists("~/x3dLooper/".standardizePath);
