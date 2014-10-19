@@ -20,13 +20,15 @@ SynthDef.new(\particleSin, {
 	decay = dur * 3;
 	dtline = Line.kr(dtstart, dt, decay);
 	env = Env.perc(att, dur - att, amp);
-	source = (SinOsc.ar(freq) + SinOsc.ar(freq * (2**(tone1/12))) + SinOsc.ar(freq * (2**(tone2/12))) ) * EnvGen.kr(env);
+//	source = (SinOsc.ar(freq) + SinOsc.ar(freq * (2**(tone1/12))) + SinOsc.ar(freq * (2**(tone2/12))) ) * EnvGen.kr(env);
+	source = Mix.ar(SinOsc.ar([freq, freq * (2**(tone1/12)), freq * (2**(tone2/12))]) * EnvGen.kr(env));
 	out = source + CombC.ar(source, maxdt, dtline, decay);
 	out = Pan2.ar(out, pan);
 	DetectSilence.ar(out, doneAction: 2);
 	Out.ar(outBus, out)
 }).add;
-
+)
+(
 // min dur permitted to hear the delay is 0.23
 SynthDef.new(\particleForm, {
 	arg

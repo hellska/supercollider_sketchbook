@@ -2,7 +2,7 @@
 // adressed to image_control_center sketch
 (
 m = NetAddr.new("127.0.0.1",12000);
-m.sendMsg("/delay", 23456);
+m.sendMsg("/delay", 200);
 )
 
 (
@@ -29,6 +29,7 @@ OSCFunc.new({|msg, time, addr, recvPort| ("Ciao sono io: "++msg[1]).postln }, '/
 
 
 // play sequence of notes with frequencies from red color in pixels received from processing
+/////////////// Red development functions
 (
 OSCdef.new(\playRed,
 	{|msg, time, addr, rport|
@@ -51,7 +52,7 @@ OSCdef.new(\playRed,
 			\outBus, 0,
 			\dt, 0.001,
 			\maxdt, 3,
-			\dur, 3,
+			\dur, 10,
 			\freq, Pseq(msg),
 			\pan, Pfunc({1.0.rand2})
 		).play;
@@ -74,3 +75,38 @@ OSCdef.new(\playRed,
 		).play;
 		} , '/red');
 )
+// Play only Sinusoids with fixed event dur
+(
+OSCdef.new(\playRed,
+	{|msg, time, addr, rport|
+		var edur, nextList;
+		edur = 10;
+		nextList = (edur * msg.size * 100).asInt;
+		m.sendMsg("/delay", nextList);
+		("Red Array Size: "++msg.size).postln;
+		Pbind(
+			\instrument, \particleSin,
+			\outBus, 0,
+			\dt, Pseq([0.01, 0.1, 0.008], msg.size),
+			\maxdt, 3,
+			\dur, 10,
+			\freq, Pseq(msg),
+			\pan, Pfunc({1.0.rand2})
+	).play },
+	'/red'
+);
+)
+/////////////// Blue development functions
+(
+OSCdef(\playBlue, {|msg, time, addr, port|
+	var scaledValues, nextList;
+	scaledValues = ((msg / 256) * 40) + 40; // frequency range from 40 to 80 Hz
+	~image_control_center.sendMsg('/deltaTblue', nextList) },
+	'/blue'
+);
+)
+
+OSCdef(\playRed).free;
+OSCdef(\playBlue).free;
+OSCdef.all;
+s.meter
