@@ -2,9 +2,19 @@
 // start default server using 1GB of memory for large delay use
 o = ServerOptions.new;
 o.memSize = 1048576;
-s = Server(\local, NetAddr("localhost", 57110), o);
+Server.default.options = o;
 s.boot;
 s.meter;
+s.volume.gui;
+)
+(
+// start secondary server using 1GB of memory for large delay use
+o = ServerOptions.new;
+o.memSize = 1048576;
+Server.default = Server.local;
+l = Server(\local2, NetAddr("localhost", 57110), o);
+l.boot;
+l.meter;
 )
 
 (
@@ -21,7 +31,10 @@ s.sendMsg("s_new", "\particleForm", s.nextNodeID, 0, 1);
 s.sendMsg("s_new", "\particleSin", s.nextNodeID, 0, 1);
 s.sendMsg("n_free", n);
 
-
+(
+s.record; // start recording on disk (master output)
+s.stopRecording; // stop recording on disk
+)
 
 (
 // get version specs
@@ -42,7 +55,6 @@ thisProcess.preferences
 Main.version.postln;
 thisProcess.openPorts.postln;
 )
-s.quit
 
-s.scope;
-s.meter;
+"ps -ef | grep scsy".unixCmd;
+"kill".unixCmd;

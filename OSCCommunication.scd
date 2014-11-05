@@ -110,3 +110,14 @@ OSCdef(\playRed).free;
 OSCdef(\playBlue).free;
 OSCdef.all;
 s.meter
+
+///// original
+OSCdef(\playBlue, {|msg, time, addr, port|
+	var scaledValues, nextList;
+	("Blue Array Size: "++msg.size++" - Arrived on time: "++time).postln;
+	nextList = 50000;
+	scaledValues = ((msg / 255) * 40) + 40; // frequency range from 40 to 80 Hz
+//	scaledValues.postln;
+	~image_control_center.sendMsg('/deltaTblue', nextList) },
+	'/blue'
+);

@@ -11,3 +11,8 @@
 ~junxion.sendMsg("/jXinput/2", 0); // change back to junxion state 1
 ~junxion.sendMsg("/jXinput/2", 1);
 )
+
+// from state 1 change to state 2
+~junxion.sendBundle(0.2,["/jXinput/1", 0],[ "/jXinput/1", 1]);
+// from state 2 change to state 1
+~junxion.sendBundle(0.2,["/jXinput/2", 0],[ "/jXinput/2", 1]);

@@ -27,8 +27,7 @@ SynthDef.new(\particleSin, {
 	DetectSilence.ar(out, doneAction: 2);
 	Out.ar(outBus, out)
 }).add;
-)
-(
+
 // min dur permitted to hear the delay is 0.23
 SynthDef.new(\particleForm, {
 	arg
