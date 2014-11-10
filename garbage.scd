@@ -206,6 +206,26 @@ SynthDef.new(\greenGlitch, {
 	rev = FreeVerb.ar(in:pan,mix:revmix,room:revroom,damp:revHFdamp);
 	Out.ar(bus:out,channelsArray:rev)
 }).send(s);
+
+
+OSCdef(\green, {|msg,time,addr,port|
+	msg[1..msg.size-1].postln;
+	~greenFunc.value(msg[1..msg.size-1])
+}, "/green");
+
+~greenFunc = {|inList|
+	var myList,postart;
+	myList = inList / 255 * 80 + 40;
+	postart = 1.0.rand*2-1;
+//	Synth(\greenGlitch, [\hpfreq, b.midicps, \posstart, a, \dur, c]);
+	s.sendBundle(0.5,
+		["/s_new", \greenGlitch, ~gglitch = s.nextNodeID, 0, 1],
+		["/n_set", ~gglitch,
+			\hpfreq, inList.midicps,
+			\posstart, postart,
+			\dur, 15.rand+15,
+	]);
+}
 )
 
 (
@@ -218,3 +238,4 @@ x = Synth(\greenGlitch, [\hpfreq, b.midicps, \posstart, a, \dur, c]);
 
 FreqScope.new;
 s.queryAllNodes;
+s.volume.gui;

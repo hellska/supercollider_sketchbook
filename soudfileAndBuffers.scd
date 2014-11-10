@@ -3,6 +3,7 @@ o.numBuffers;
 o.memSize;
 
 ~drumkit = SoundFile.collect(path: "/Volumes/ssdData/Industrial-autoprodotti/*".standardizePath);
+~bufDrumkit = SoundFile.collectIntoBuffers(path: "/Volumes/ssdData/Industrial-autoprodotti/*".standardizePath);
 
 (
 ~fileInfo = {|fileNum, sndFileArray|
@@ -33,3 +34,15 @@ b = ~drumkit[0].info;
 // type writer soud design
 { PlayBuf.ar(1, ~bufDrumkit[20].bufnum,rate:rand(10)+2, doneAction: 2) }.play;
 
+(
+~bufDrumkit = SoundFile.collectIntoBuffers(path: "/Volumes/ssdData/Industrial-autoprodotti/*".standardizePath);
+OSCdef(\flickerIn,
+	{|msg, addr, time, port|
+		{ PlayBuf.ar(1, ~bufDrumkit[rand(~bufDrumkit.size-1)].bufnum, doneAction: 2) }.play;
+		msg.postln;
+	},
+	'/flicker');
+)
+
+y = NetAddr.new("127.0.0.1", 57120);
+y.sendMsg('/flicker', 92);

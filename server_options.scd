@@ -27,6 +27,9 @@ l.meter;
 s = Server("bMServer", NetAddr("192.168.1.4", 56888));
 
 s.sendMsg("s_new", "default", n = s.nextNodeID, 0, 1);
+
+a = Synth.new(\defaul);
+
 s.sendMsg("s_new", "\particleForm", s.nextNodeID, 0, 1);
 s.sendMsg("s_new", "\particleSin", s.nextNodeID, 0, 1);
 s.sendMsg("n_free", n);

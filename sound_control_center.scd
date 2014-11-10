@@ -7,16 +7,16 @@ OSCdef.new(\playRed,
 		// fixed event duration
 		edur = 10;
 		nextList = (edur * msg.size * 100).asInt;
-		scaledValues = (msg[1..msg.size-1] / 255 * 80 + 20).midicps;
+		scaledValues = (msg[1..msg.size-1] / 255 * 80 + 50).midicps;
 		~image_control_center.sendMsg('/deltaTred', nextList);
 		("Red Array Size: "++msg.size++" - Arrived on time: "++time).postln;
+		scaledValues.postln;
 		Pbind(
 			\instrument, \particleSin,
 			\outBus, 0,
 			\dt, Pseq([0.01, 0.1, 0.008], msg.size),
 			\maxdt, 3,
 			\dur, 10,
-//			\freq, Pseq(msg[1..msg.size-1]),
 			\freq, Pseq(scaledValues),
 			\pan, Pfunc({1.0.rand2})
 		).play;
@@ -25,9 +25,9 @@ OSCdef.new(\playRed,
 ///////////////////////////// BLUE
 OSCdef(\playBlue, {|msg, time, addr, port|
 	var scaledValues, nextList, minFrq, cutFrq;
-	("Blue Array Size: "++msg.size++" - Arrived on time: "++time).postln;
+//	("Blue Array Size: "++msg.size++" - Arrived on time: "++time).postln;
 	nextList = 500000;
-	~droneFunc.value(msg);
+	~droneFunc.value(msg,time);
 	~image_control_center.sendMsg('/deltaTblue', nextList) },
 	'/blue'
 );
@@ -92,39 +92,106 @@ SynthDef.new(\rumbledrone, {
 /// FUNCTIONS
 ///////////////////////////// Generate a Chaotic drone that can stand alone
 //~droneFunc = Routine{|input|
-~droneFunc = {|input|
+~droneFunc = {|input,time|
 	var mfrq;
 	input = input[1..input.size-1] * 5;
-	input.postln;
-	mfrq = Pseq(input, inf).asStream;
-	d = Prand(input / 255 * 12, inf).asStream;
+	mfrq = Pseq(input + 50, inf).asStream;
+	d = Prand(input / 255 * 12 + 1, inf).asStream;
 	input = input * 1.5;
+//	input.postln;
+	c = Pseq(input + 50, inf).asStream;
+	("Blue Array Size: "++input.size++" - Arrived on time: "++time).postln;
 	input.postln;
-	c = Pseq(input, inf).asStream;
-//	s.sendBundle(0.2, ['/s_new', '\rumbledrone', ~drone = s.nextNodeID, 0, 1],['/n_set', ~drone, \minFreq, f.value, \lpCutoffFreq, c.value, \panOscFreq, 0.001]);
+	mfrq.value.postln;
 	s.sendBundle(0.2,
 		['/s_new', '\rumbledrone', ~drone = s.nextNodeID, 0, 1],
 		['/n_set', ~drone,
-//			\minFreq, f.value,
 			\minFreq, mfrq.value,
 			\lpCutoffFreq, c.value,
 			\panOscFreq, 0.01,
 			\freqOscFreq, d.value
 	]);
 };
+////////////////////////// GREEN
+SynthDef.new(\greenGlitch, {
+	|out = 0,
+	dur = 15
+	tnoisefreq = 0.3,
+	tnoisemul = 100,
+	tnoiseadd = 3500,
+	tduskdens = 250,
+	tsinfreq = 9, // preferred range 0.01 - 10
+	amp = 0.3,
+	numharm = 200,
+	hpfreq = 1200, // range 1200-3000
+	hprq = 0.01,
+//	posfreq = 1 / dur
+	posstart = 0,
+	posmul = 2,
+	posadd = -1,
+	revmix = 0.33,
+	revroom = 0.5,
+	revHFdamp = 0|
+	var source, sourcerate, filter, pan, rev, env, envshape;
+	envshape = Env.sine(dur:dur);
+	env = EnvGen.ar(envshape,doneAction:2);
+	sourcerate = LFNoise2.kr(freq:tnoisefreq,mul:tnoisemul,add:tnoiseadd) *
+	Dust.kr(density:tduskdens) *
+	SinOsc.kr(freq:tsinfreq);
+	source = Blip.ar(freq:sourcerate,numharm:numharm,mul:amp);
+	filter = RHPF.ar(in:source,freq:hpfreq,rq:hprq);
+	pan = Pan2.ar(in:filter,pos:SinOsc.kr(freq:1/dur,phase:posstart,mul:posmul,add:posadd)) * env;
+	rev = FreeVerb.ar(in:pan,mix:revmix,room:revroom,damp:revHFdamp);
+	Out.ar(bus:out,channelsArray:rev)
+}).send(s);
+
+
+OSCdef(\green, {|msg,time,addr,port|
+//	msg[1..msg.size-1].postln;
+	~greenFunc.value(msg[1..msg.size-1], time)
+}, "/green");
+
+~greenFunc = {|inList, time|
+	var myList,postart,delta;
+	myList = inList / 255 * 80 + 40;
+	postart = 1.0.rand*2-1;
+	("Green Array Size: "++inList.size++" - Arrived on time: "++time).postln;
+	myList.postln;
+	s.sendBundle(0.5,
+		["/s_new", \greenGlitch, ~gglitch = s.nextNodeID, 0, 1],
+		["/n_set", ~gglitch,
+			\hpfreq, myList.midicps,
+			\posstart, postart,
+			\dur, 15.rand+15,
+	]);
+	delta = 30000.rand+15000;
+	~image_control_center.sendMsg('/deltaTgreen', delta);
+};
+
+
+~bufDrumkit = SoundFile.collectIntoBuffers(path: "/Volumes/ssdData/Industrial-autoprodotti/*".standardizePath);
+OSCdef(\flickerIn,
+	{|msg, addr, time, port|
+		// random play
+//		{ Pan2.ar(PlayBuf.ar(1, ~bufDrumkit[rand(~bufDrumkit.size-1)].bufnum, doneAction: 2), rand(2)-1) }.play;
+		// play received sound
+		{ Pan2.ar(PlayBuf.ar(1, ~bufDrumkit[msg[1]].bufnum, doneAction: 2), rand(2)-1, 0.3) }.play;
+//		msg[1].postln;
+	},
+	'/flicker');
 )
 
-d.value.plot(1);
-c.size
-s.nextNodeID
-
-~drone.set(\minFreq, f.value, \lpCutoffFreq, c.value);
-~droneFunc.value([120, 255, 110, 78, 45, 145]);
-~drone.nodeID
-~image_control_center.sendMsg("/delay", 200);
-OSCdef.all;
 ~image_control_center.sendMsg('/deltaTblue', 200);
 ~image_control_center.sendMsg('/deltaTred', 200);
+
+~image_control_center.sendMsg('/deltaTgreen', 20000);
+
+
 s.queryAllNodes
+
 OSCdef('\playBlue').free
-~drone.newMsg(g)
+OSCdef.all;
+
+~bufDrumkit.size;
+
+		{ Pan2.ar(PlayBuf.ar(1, ~bufDrumkit[rand(~bufDrumkit.size-1)].bufnum, doneAction: 2), rand(2)-1) }.play;
