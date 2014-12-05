@@ -46,3 +46,12 @@ OSCdef(\flickerIn,
 
 y = NetAddr.new("127.0.0.1", 57120);
 y.sendMsg('/flicker', 92);
+
+SynthDef(\play, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0 |
+	var source, out, env, envdur;
+	envdur = start / 44100 - 0.04;
+	env = Env.asr(attackTime:0.02,sustainLevel:envdur,releaseTime:0.02,curve:\lin);
+	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2);
+	out = Pan2.ar(source, panpot) * EnvGen.ar(env);
+    Out.ar(outBus, out)
+}).send(s);

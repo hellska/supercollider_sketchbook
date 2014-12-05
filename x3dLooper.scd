@@ -10,6 +10,7 @@ s.boot;
 ~currentFolder = "~/x3dLooper/"++~currentFolder[0]++"/";
 ~recFile = ~currentFolder++"x3dL_1.aiff";
 ~stdHeader = ~currentFolder++"x3dL_";
+~ext = "aiff";
 // check current folder and create a new one for each day session
 if ( File.exists(~currentFolder.standardizePath) )
 { ("Folder for sample record: "++~currentFolder).postln }
@@ -50,9 +51,11 @@ SynthDef(\rec, {arg bufnum, inbus;
 }).send(s);
 // this will play it back mono file (default panpot center)
 SynthDef(\play, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0 |
-	var source, out;
+	var source, out, env, envdur;
+	envdur = start / 44100 - 0.06;
+	env = Env.asr(attackTime:0.02,sustainLevel:envdur,releaseTime:0.04,curve:\lin);
 	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2);
-	out = Pan2.ar(source, panpot);
+	out = Pan2.ar(source, panpot) * EnvGen.ar(env);
     Out.ar(outBus, out)
 }).send(s);
 // Very simple Pitch Shifter
@@ -75,7 +78,9 @@ SynthDef.new(\mixer, {|inBus, outBus = 0|
 ~rec = {|filein, source|
 	i = Synth.new(\soundinMono, [\inBus, source, \outBus, ~input]);
 	r = Buffer.alloc(s, 65536, 1);
-	r.write(filein.standardizePath, "aiff", "int16", 0, 0, true);
+//	r.write(filein.standardizePath, ~ext, "int16", 0, 0, true);
+
+	r.write(filein.standardizePath, ~ext, "int24", 0, 0, true);
 	b = Synth.tail(nil,\rec, [\bufnum, r, \inbus, ~input]);
 };
 // stop recording soundin
@@ -113,7 +118,7 @@ OSCdef(\play, {|msg, time, addr, port|
 // recording control
 OSCdef(\rec, {|msg, time, addr, port|
 	if (msg[1]==1){
-		~recFile = ~stdHeader++~currentRecNo++".aiff";
+		~recFile = ~stdHeader++~currentRecNo++"."++~ext;
 		~rec.value(~recFile, ~currentInputSource);
 		("Recording sample: "++~recFile).postln;
 		} {
@@ -142,10 +147,13 @@ OSCdef(\panpot, {|msg, time, addr, port|
 	~panpot = msg[1] * 2 - 1; // change range -1/1
 	}, '/jXcontrol/Xaxis'
 );
-// Pitch Shifter Mapping Function
+// Pitch Shifter Mapping Function And Range Definition
+~minPitch = 0.02;
+~mulPitch = 2.5;
 OSCdef(\pitch, {|msg, time, addr, port|
-	~pitchRatio.set(msg[1]*3.5+0.02);
+	~pitchRatio.set(msg[1] * ~mulPitch + ~minPitch);
 }, '/jXcontrol/Zrotation');
+
 // Bus selection for Sample Recording
 OSCdef(\inputSource, {|msg, time, addr, port|
 	var sourceNo = (msg[1]*127).floor.postln;
@@ -160,8 +168,8 @@ OSCdef(\inputSource, {|msg, time, addr, port|
 // Functions and OSC def for Sample Selection
 ////////////////////////////////////
 ~sampleSelection = {|sampleNo|
-	~currentFile = ~stdHeader++sampleNo++".aiff";
-	~recFile = ~stdHeader++sampleNo++".aiff";
+	~currentFile = ~stdHeader++sampleNo++"."++~ext;
+	~recFile = ~stdHeader++sampleNo++"."++~ext;
 	if (File.exists(~currentFile.standardizePath)) {
 		("Selected File: "++~currentFile).postln;
 	} {
@@ -223,7 +231,7 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 // perform startup on first clik and fx 1 on/off
 OSCdef(\fx1, {|msg, time, addr, port|
 	if (~startup) {
-		"Starting default Synths and values maping.......".postln;
+		"Starting default Synths and values mapping.......".postln;
 		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
 		~pitchshifter = Synth.new(\picthShifter, [\inBus, ~pitchBus, \pshift, 2.3], addAction: \addToTail);
 		~pitchshifter.map(\pshift, ~pitchRatio);
@@ -239,4 +247,34 @@ OSCdef(\fx1, {|msg, time, addr, port|
 	};
 }, '/jXcontrol/fx1');
 )
+// change directory
+( // using wav extension
+~currentFolder = "~/x3dLooper/industr/"; // the new path
+~recFile = ~currentFolder++"x3dL_1.aiff";
+~stdHeader = ~currentFolder++"x3dL_";
+~stdHeader.postln;
+~ext = "wav";
+~ext.postln;
+)
+(
+~currentFolder = "~/x3dLooper/20141026/";
+~recFile = ~currentFolder++"x3dL_1.aiff";
+~stdHeader = ~currentFolder++"x3dL_";
+~stdHeader.postln;
+~ext = "aiff";
+~ext.postln;
+)
+(
+a = ~mixer.nodeID;
+~mixer.isPlaying;
+~mixer.isRunning;
+b = ~frettolo.nodeID;
+s.queryAllNodes;
+a.isPlaying
 
+NodeWatcher.register(~mixer);
+
+a = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
+b = NodeWatcher.register(a);
+a.isRunning;
+b.start;

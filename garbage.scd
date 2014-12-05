@@ -239,3 +239,75 @@ x = Synth(\greenGlitch, [\hpfreq, b.midicps, \posstart, a, \dur, c]);
 FreqScope.new;
 s.queryAllNodes;
 s.volume.gui;
+
+(
+///////////////////////////// L O W F R E Q   D R O N E (blue) With Long ENV
+SynthDef.new(\rumbledrone, {
+	|outBus = 0,
+	amp = 0.5,
+	dur = 60, // in seconds
+	minFreq = 40,
+	deltaFreq = 20,
+	freqOscFreq = 6,
+	feedback = 3,
+	feedbackOscFreq = 0.01,
+	lpCutoffFreq = 80,
+	lpRecQ = 1,
+	hfCutoffFreq = 20,
+	revMix = 0.7,
+	revRoom = 0.8,
+	revDamp = 1,
+	panOscFreq = 2,
+	panMul = 0.2|
+	var source, filter, rev, out, fadeIn, env;
+	fadeIn = XLine.kr(start:0.1,end:amp,dur:0.1);
+	env = Line.ar(start:1,end:0,dur:dur,doneAction:2);
+	source = SinOscFB.ar(
+		freq:SinOsc.kr(freqOscFreq) * minFreq + deltaFreq,
+		feedback:SinOsc.kr(feedbackOscFreq) * feedback
+	) * fadeIn;
+
+	filter = HPF.ar(RLPF.ar(source, lpCutoffFreq, lpRecQ), hfCutoffFreq);
+	rev = FreeVerb.ar(filter, revMix, revRoom, revDamp);
+	out = Pan2.ar(rev, SinOsc.kr(panOscFreq) * panMul);
+//	EnvGen.kr( Env.cutoff );
+
+	Out.ar(outBus, out * env)
+}).send(s);
+/// FUNCTIONS
+///////////////////////////// Generate a Chaotic drone that can stand alone
+//~droneFunc = Routine{|input|
+~droneFunc = {|input,time|
+	var mfrq;
+	input = input[1..input.size-1] * 5;
+	mfrq = Pseq(input + 50, inf).asStream;
+	d = Prand(input / 255 * 12 + 1, inf).asStream;
+	input = input * 1.5;
+//	input.postln;
+	c = Pseq(input + 50, inf).asStream;
+	("Blue Array Size: "++input.size++" - Arrived on time: "++time).postln;
+	input.postln;
+	mfrq.value.postln;
+	s.sendBundle(0.2,
+		['/s_new', '\rumbledrone', ~drone = s.nextNodeID, 0, 1],
+		['/n_set', ~drone,
+			\minFreq, 50,
+			\lpCutoffFreq, 60,
+			\panOscFreq, 0.01,
+			\freqOscFreq, c.value
+	]);
+};
+)
+~droneFunc.value(['/ciao', 70], 34567);
+~droneFunc.value(['/ciao', 0], 34567);
+s.queryAllNodes;
+s.sendMsg(['/n_set', ~drone, \minFreq, 220]);
+s.plotTree;
+
+{ XLine.kr(start:0.001,end:0.5,dur:0.1) }.plot(0.1);
+{ Line.ar(start:1,end:0,dur:60,doneAction:2) }.plot(60);
+
+Env.linen(attackTime:0.01,sustainTime:1,releaseTime:1,level:1,curve:\lin).test.plot;
+Env.linen(attackTime:0.01,sustainTime:1,releaseTime:1,level:1,curve:\welch).test.plot;
+Env.linen(attackTime:0.01,sustainTime:1,releaseTime:1,level:1,curve:\exp).test.plot;
+Env.linen(attackTime:0.01,sustainTime:1,releaseTime:1,level:1,curve:\exp).test.plot;

@@ -31,9 +31,6 @@ OSCdef(\playBlue, {|msg, time, addr, port|
 	~image_control_center.sendMsg('/deltaTblue', nextList) },
 	'/blue'
 );
-///////////////////////////// BLUE
-
-
 ///////////////////////////// RED Synth
 SynthDef.new(\particleSin, {
 	arg
@@ -63,6 +60,7 @@ SynthDef.new(\particleSin, {
 SynthDef.new(\rumbledrone, {
 	|outBus = 0,
 	amp = 0.5,
+	dur = 100000,
 	minFreq = 40,
 	deltaFreq = 20,
 	freqOscFreq = 6,
@@ -76,22 +74,22 @@ SynthDef.new(\rumbledrone, {
 	revDamp = 1,
 	panOscFreq = 2,
 	panMul = 0.2|
-	var source, filter, rev, out, fadeIn;
+	var source, filter, rev, out, fadeIn, env;
 	source = SinOscFB.ar(
 		freq:SinOsc.kr(freqOscFreq) * minFreq + deltaFreq,
 		feedback:SinOsc.kr(feedbackOscFreq) * feedback
 	);
+	env = Line.kr(start:1,end:0,dur:dur,doneAction:2);
 	filter = HPF.ar(RLPF.ar(source, lpCutoffFreq, lpRecQ), hfCutoffFreq);
 	rev = FreeVerb.ar(filter, revMix, revRoom, revDamp);
 	out = Pan2.ar(rev, SinOsc.kr(panOscFreq) * panMul)
 	*
-	EnvGen.kr( Env.cutoff );
+	env;
+//	EnvGen.kr( Env.cutoff );
 	fadeIn = Line.kr(start:0,end:amp,dur:20);
 	Out.ar(outBus, out * fadeIn)
 }).send(s);
-/// FUNCTIONS
 ///////////////////////////// Generate a Chaotic drone that can stand alone
-//~droneFunc = Routine{|input|
 ~droneFunc = {|input,time|
 	var mfrq;
 	input = input[1..input.size-1] * 5;
@@ -112,7 +110,7 @@ SynthDef.new(\rumbledrone, {
 			\freqOscFreq, d.value
 	]);
 };
-////////////////////////// GREEN
+////////////////////////// GREEN Controlled Synth
 SynthDef.new(\greenGlitch, {
 	|out = 0,
 	dur = 15
@@ -144,8 +142,7 @@ SynthDef.new(\greenGlitch, {
 	rev = FreeVerb.ar(in:pan,mix:revmix,room:revroom,damp:revHFdamp);
 	Out.ar(bus:out,channelsArray:rev)
 }).send(s);
-
-
+////////////////////////// GREEN Receiver OSC Function to Control Synth
 OSCdef(\green, {|msg,time,addr,port|
 //	msg[1..msg.size-1].postln;
 	~greenFunc.value(msg[1..msg.size-1], time)
@@ -168,7 +165,6 @@ OSCdef(\green, {|msg,time,addr,port|
 	~image_control_center.sendMsg('/deltaTgreen', delta);
 };
 
-
 ~bufDrumkit = SoundFile.collectIntoBuffers(path: "/Volumes/ssdData/Industrial-autoprodotti/*".standardizePath);
 OSCdef(\flickerIn,
 	{|msg, addr, time, port|
@@ -181,17 +177,12 @@ OSCdef(\flickerIn,
 	'/flicker');
 )
 
+
+// test communication with processing sketch
 ~image_control_center.sendMsg('/deltaTblue', 200);
 ~image_control_center.sendMsg('/deltaTred', 200);
-
 ~image_control_center.sendMsg('/deltaTgreen', 20000);
-
-
-s.queryAllNodes
-
-OSCdef('\playBlue').free
-OSCdef.all;
 
 ~bufDrumkit.size;
 
-		{ Pan2.ar(PlayBuf.ar(1, ~bufDrumkit[rand(~bufDrumkit.size-1)].bufnum, doneAction: 2), rand(2)-1) }.play;
+s.queryAllNodes
