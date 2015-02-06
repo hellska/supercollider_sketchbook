@@ -1,3 +1,8 @@
+
+// put the subfolder name you want
+~changeFolder.value("industr", "wav");
+~changeFolder.value("20141026", "aiff");
+
 // restart interpreter and quit server
 thisProcess.recompile;
 // boot the local server
@@ -27,6 +32,7 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~input = Bus.audio(s, 1);
 ~sampleOut = Bus.audio(s, 2);
 ~pitchBus = Bus.audio(s, 2);
+~inputVol = 0.9;
 ///////// Control Bus
 ~pitchRatio = Bus.control(s, 1);
 ///////// Buffers
@@ -52,8 +58,8 @@ SynthDef(\rec, {arg bufnum, inbus;
 // this will play it back mono file (default panpot center)
 SynthDef(\play, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0 |
 	var source, out, env, envdur;
-	envdur = start / 44100 - 0.06;
-	env = Env.asr(attackTime:0.02,sustainLevel:envdur,releaseTime:0.04,curve:\lin);
+	envdur = start / 44100 - 0.02;
+	env = Env.asr(attackTime:0.02,sustainLevel:0.5,releaseTime:envdur,curve:\lin);
 	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2);
 	out = Pan2.ar(source, panpot) * EnvGen.ar(env);
     Out.ar(outBus, out)
@@ -76,7 +82,8 @@ SynthDef.new(\mixer, {|inBus, outBus = 0|
 ////////////////////////////////////
 // recording soundin
 ~rec = {|filein, source|
-	i = Synth.new(\soundinMono, [\inBus, source, \outBus, ~input]);
+	// comment this to record from a synthdef
+	i = Synth.new(\soundinMono, [\inBus, source, \outBus, ~input, \amp, ~inputVol]);
 	r = Buffer.alloc(s, 65536, 1);
 //	r.write(filein.standardizePath, ~ext, "int16", 0, 0, true);
 
@@ -246,7 +253,19 @@ OSCdef(\fx1, {|msg, time, addr, port|
 		};
 	};
 }, '/jXcontrol/fx1');
+
+~changeFolder = {|folder, ext|
+~currentFolder = "~/x3dLooper/"++folder++"/";
+~recFile = ~currentFolder++"x3dL_1.aiff";
+~stdHeader = ~currentFolder++"x3dL_";
+~stdHeader.postln;
+~ext = ext;
+~ext.postln;
+};
 )
+
+
+
 // change directory
 ( // using wav extension
 ~currentFolder = "~/x3dLooper/industr/"; // the new path
@@ -265,6 +284,18 @@ OSCdef(\fx1, {|msg, time, addr, port|
 ~ext.postln;
 )
 (
+~changeFolder = {|folder, ext|
+~currentFolder = "~/x3dLooper/"++folder++"/";
+~recFile = ~currentFolder++"x3dL_1.aiff";
+~stdHeader = ~currentFolder++"x3dL_";
+~stdHeader.postln;
+~ext = ext;
+~ext.postln;
+};
+)
+~changeFolder.value("20141026");
+
+(
 a = ~mixer.nodeID;
 ~mixer.isPlaying;
 ~mixer.isRunning;
@@ -278,3 +309,4 @@ a = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
 b = NodeWatcher.register(a);
 a.isRunning;
 b.start;
+
