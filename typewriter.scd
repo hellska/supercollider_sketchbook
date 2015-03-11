@@ -16,9 +16,12 @@
 	});
 });
 )
+
+/*
 ~typewriter.start;
 ~typewriter.stop;
 
 s.prepareForRecord;
 s.record;
 s.stopRecording;
+*/

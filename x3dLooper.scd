@@ -4,9 +4,9 @@
 ~changeFolder.value("20141026", "aiff");
 
 // restart interpreter and quit server
-thisProcess.recompile;
+// thisProcess.recompile;
 // boot the local server
-s.boot;
+// s.boot;
 // first of all load all needed Bus and variables [[[ONLY ONCE]]]
 (
 ///////// Global Variables
@@ -39,8 +39,8 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~recordBuff = Buffer.alloc(s, 65536);
 ~playBuff = Buffer.read(s, "~/x3dLooper/x3dL_default.aiff".standardizePath, 0);
 ~currentFile = "~/x3dLooper/x3dL_default.aiff";
-)
-(
+
+
 ////////////////////////////////////
 // SynthDef Definition - \soundinMono, \rec, \play, \picthShifter, \mixer
 ////////////////////////////////////
@@ -159,6 +159,7 @@ OSCdef(\panpot, {|msg, time, addr, port|
 ~mulPitch = 2.5;
 OSCdef(\pitch, {|msg, time, addr, port|
 	~pitchRatio.set(msg[1] * ~mulPitch + ~minPitch);
+	// (msg[1] * ~mulPitch + ~minPitch).postln;
 }, '/jXcontrol/Zrotation');
 
 // Bus selection for Sample Recording
@@ -265,7 +266,7 @@ OSCdef(\fx1, {|msg, time, addr, port|
 )
 
 
-
+/*
 // change directory
 ( // using wav extension
 ~currentFolder = "~/x3dLooper/industr/"; // the new path
@@ -309,4 +310,4 @@ a = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
 b = NodeWatcher.register(a);
 a.isRunning;
 b.start;
-
+*/

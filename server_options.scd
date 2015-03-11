@@ -62,3 +62,8 @@ thisProcess.openPorts.postln;
 "ps -ef | grep scsy".unixCmd;
 "kill".unixCmd;
 s.makeGui;
+s.meter;
+Platform.platformDir;
+Platform.classLibraryDir;
+Platform.userConfigDir;
+Platform.resourceDir;

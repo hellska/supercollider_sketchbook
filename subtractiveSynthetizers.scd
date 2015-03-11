@@ -1,12 +1,12 @@
 ////////////////////////////////////////////
 //////N O R T O N   C O M M A N D E R//////
 ////////////////////////////////////////////
-
+/*
 ~simple.value;
 ~rumble.value;
 ~randomDelay.value;
 ~ranDelaySwipe.value;
-
+*/
 ////////////////////////////////////////////
 
 (
@@ -39,13 +39,13 @@ SynthDef.new(\pulseBass2, {|outBus=0, frq=48, dur=3, amp=0.5, times=4, att=0.01,
 	out = filter * env !2;
 	Out.ar(outBus, out * amp)
 }).send(s);
-)
+
 ///////////// I N I T I A L I Z E   M I D I   D E V I C E ////////////////////
-MIDIClient.init;
+// MIDIClient.init;
 ///////////// C O N N E C T   M I D I   D E V I C E ////////////////////
-MIDIIn.connect;
+// MIDIIn.connect;
 ////////// standard delay without rumble
-(
+
 ~simple = {|status|
 MIDIIn.removeFuncFrom(\noteOn, ~noteOn);
 ~synth1 = "\pulseBass";
