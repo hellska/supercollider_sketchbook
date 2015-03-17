@@ -27,7 +27,7 @@ MIDIIn.removeFuncFrom(\noteOn, ~noteOn);
 ~ddur = 4.3;
 ~noteOn = {arg src, chan, num, vel;
 	var pitch, velo, pos;
-	pos = 1.rand;
+	pos = 1.rand * 2 - 1;
     pitch = num; //.midicps;
 	velo = (vel / 127.0) * 1.5;
 		Synth(~synth, [\hpfreq, pitch.midicps, \posstart, pos]);

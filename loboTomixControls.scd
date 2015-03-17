@@ -1,7 +1,7 @@
 ////////////////////////////////////////////
 //////N O R T O N   C O M M A N D E R//////
 //////////////////////////////////////////
-
+s.meter
 // Change Synth and MIDI Func
 
 ~simple.value;
@@ -13,7 +13,7 @@
 ~greenGlitch.value;
 ~rumbledrone.value;
 ~dur = 180; // define note duration in seconds for ~rumbledrone
-
+~dur = 30; // default
 ////////////////////////////////////////////
 /////////// L O O P E R ///////////////////
 
@@ -49,5 +49,3 @@ MIDIClient.sources;
 // Connect and disconnect MIDI devices without removing functions
 MIDIIn.connect(0, MIDIClient.sources.at(0));
 MIDIIn.disconnect;
-
-s.meter
