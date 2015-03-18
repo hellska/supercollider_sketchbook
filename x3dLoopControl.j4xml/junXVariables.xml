@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Variables>
+    <COMMENT>
+        <!--***************************************************-->
+        <!-- <ExampleVariable>a1 | a2</ExampleVariable>        -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!--                                                   -->
+        <!--  INDEX :                    -->
+        <!-- a1 :  Name        (string)  -->
+        <!-- a2 :  InitValue   (int)     -->
+        <!--***************************************************-->
+        <!--                                                   -->
+        <!-- CONFIGURATION VARIABLES:                          -->
+        <!--                                                   -->
+    </COMMENT>
+    <gMaxVariables>1</gMaxVariables>
+    <Variable1>Variable 1 | 0</Variable1>
+</Variables>

@@ -20,10 +20,11 @@ s.meter
 // changel the looper folder
 // put the subfolder name you want
 
-~changeFolder.value("industr", "wav");
-~changeFolder.value("industr_01", "wav");
+~changeFolder.value("industr", "wav"); // self recorded hammers, barrels etc...
+~changeFolder.value("industr_01", "wav"); // self recorded hammers, barrels etc...
 ~changeFolder.value("20141026", "aiff");
 ~changeFolder.value("20150127", "aiff");
+~changeFolder.value("sonicTailors", "aiff"); // italian word from factory workers of Marghera
 
 // change input volume
 ~inputVol = 0.9;

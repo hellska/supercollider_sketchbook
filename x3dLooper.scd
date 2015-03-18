@@ -1,4 +1,4 @@
-
+// Use With Junxion Software and the file x3dLoopControl.j4xml
 // put the subfolder name you want
 ~changeFolder.value("industr", "wav");
 ~changeFolder.value("20141026", "aiff");
@@ -31,10 +31,13 @@ if ( File.exists(~currentFolder.standardizePath) )
 ///////// Audio Bus
 ~input = Bus.audio(s, 1);
 ~sampleOut = Bus.audio(s, 2);
-~pitchBus = Bus.audio(s, 2);
+~mute = Bus.audio(s, 2);
+~fxBus = Bus.audio(s, 2);
+~fxCount = 0;
 ~inputVol = 0.9;
 ///////// Control Bus
 ~pitchRatio = Bus.control(s, 1);
+~delTime = Bus.control(s, 1);
 ///////// Buffers
 ~recordBuff = Buffer.alloc(s, 65536);
 ~playBuff = Buffer.read(s, "~/x3dLooper/x3dL_default.aiff".standardizePath, 0);
@@ -65,10 +68,16 @@ SynthDef(\play, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0 |
     Out.ar(outBus, out)
 }).send(s);
 // Very simple Pitch Shifter
-SynthDef.new(\picthShifter, {|inBus, outBus = 0, pshift, pRndVar = 0, trndVar = 0|
+SynthDef.new(\picthShifter, {|inBus, outBus, pshift, pRndVar = 0, trndVar = 0|
 	var source, out;
 	source = In.ar(inBus, 2);
 	out = PitchShift.ar(source, 0.2, pshift, pRndVar, trndVar);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef(\deldelay, {|inBus, outBus, repeat = 15, delaytime|
+	var source, out;
+	source = In.ar(inBus, 2);
+	out = CombC.ar(source,maxdelaytime: delaytime + (delaytime/4) , delaytime: delaytime,decaytime: delaytime * repeat);
 	Out.ar(outBus, out)
 }).send(s);
 // Otput Mixer for Al Samples
@@ -161,7 +170,11 @@ OSCdef(\pitch, {|msg, time, addr, port|
 	~pitchRatio.set(msg[1] * ~mulPitch + ~minPitch);
 	// (msg[1] * ~mulPitch + ~minPitch).postln;
 }, '/jXcontrol/Zrotation');
-
+// receive slider values
+OSCdef(\deltime, {|msg, time, addr, port|
+	~delTime.set(msg[1] * 4 + 0.02);
+	(msg[1] * 4 + 0.02).postln;
+}, '/jXcontrol/slider');
 // Bus selection for Sample Recording
 OSCdef(\inputSource, {|msg, time, addr, port|
 	var sourceNo = (msg[1]*127).floor.postln;
@@ -240,21 +253,52 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 OSCdef(\fx1, {|msg, time, addr, port|
 	if (~startup) {
 		"Starting default Synths and values mapping.......".postln;
+		~pitchshifter = Synth.new(\picthShifter, [\inBus, ~sampleOut, \pshift, 2.3, \outBus, ~mute], addAction: \addToTail);
+		~delay = Synth.new(\deldelay, [\inBus, ~sampleOut, \outBus, ~mute, \delaytime, 0.2], addAction: \addToTail);
 		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
-		~pitchshifter = Synth.new(\picthShifter, [\inBus, ~pitchBus, \pshift, 2.3], addAction: \addToTail);
-		~pitchshifter.map(\pshift, ~pitchRatio);
 		~startup = false;
+		~pitchshifter.map(\pshift, ~pitchRatio);
+//		~delay.map(\delaytime, ~delTime);
 	} {
 		if (msg[1]==1) {
+//			~mixer.set(\outBus, 0);
+			~fxCount = ~fxCount - 1;
+			if (~fxCount == 0) {
+				~mixer.set(\inBus, ~sampleOut);
+			};
+			~pitchshifter.set(\outBus, ~mute);
 			"FX 1 (pitch shifter) off!".postln;
-			~mixer.set(\outBus, 0);
+			~fxCount.postln;
 		} {
-			~mixer.set(\outBus, ~pitchBus);
+			~fxCount = ~fxCount + 1;
+			~mixer.set(\inBus, ~fxBus);
+			~pitchshifter.set(\inBus, ~sampleOut, \outBus, ~fxBus);
 			"FX 1 (pitch shifter) on!".postln;
+			~fxCount.postln;
 		};
 	};
 }, '/jXcontrol/fx1');
-
+// second fx
+OSCdef(\fx2, {|msg, time, addr, port|
+	if (msg[1]==1) {
+		~fxCount = ~fxCount - 1;
+		if (~fxCount == 0) {
+			~mixer.set(\inBus, ~sampleOut);
+		};
+		~delay.set(\outBus, ~mute);
+		"FX 2 (delay) off!".postln;
+		~fxCount.postln;
+	} {
+		~delay.map(\delaytime, ~delTime);
+		~fxCount = ~fxCount + 1;
+		~mixer.set(\inBus, ~fxBus);
+		~delay.set(\inBus, ~sampleOut, \outBus, ~fxBus);
+//		~delay.set(\delaytime, 0.2);
+		"FX 2 (delay) on!".postln;
+		~fxCount.postln;
+	};
+}, '/jXcontrol/fx2');
+// select sample folder
 ~changeFolder = {|folder, ext|
 ~currentFolder = "~/x3dLooper/"++folder++"/";
 ~recFile = ~currentFolder++"x3dL_1.aiff";
@@ -264,50 +308,3 @@ OSCdef(\fx1, {|msg, time, addr, port|
 ~ext.postln;
 };
 )
-
-
-/*
-// change directory
-( // using wav extension
-~currentFolder = "~/x3dLooper/industr/"; // the new path
-~recFile = ~currentFolder++"x3dL_1.aiff";
-~stdHeader = ~currentFolder++"x3dL_";
-~stdHeader.postln;
-~ext = "wav";
-~ext.postln;
-)
-(
-~currentFolder = "~/x3dLooper/20141026/";
-~recFile = ~currentFolder++"x3dL_1.aiff";
-~stdHeader = ~currentFolder++"x3dL_";
-~stdHeader.postln;
-~ext = "aiff";
-~ext.postln;
-)
-(
-~changeFolder = {|folder, ext|
-~currentFolder = "~/x3dLooper/"++folder++"/";
-~recFile = ~currentFolder++"x3dL_1.aiff";
-~stdHeader = ~currentFolder++"x3dL_";
-~stdHeader.postln;
-~ext = ext;
-~ext.postln;
-};
-)
-~changeFolder.value("20141026");
-
-(
-a = ~mixer.nodeID;
-~mixer.isPlaying;
-~mixer.isRunning;
-b = ~frettolo.nodeID;
-s.queryAllNodes;
-a.isPlaying
-
-NodeWatcher.register(~mixer);
-
-a = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
-b = NodeWatcher.register(a);
-a.isRunning;
-b.start;
-*/
