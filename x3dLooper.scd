@@ -40,9 +40,8 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~delTime = Bus.control(s, 1);
 ///////// Buffers
 ~recordBuff = Buffer.alloc(s, 65536);
-~playBuff = Buffer.read(s, "~/x3dLooper/x3dL_default.aiff".standardizePath, 0);
 ~currentFile = "~/x3dLooper/x3dL_default.aiff";
-
+~playBuff = Buffer.read(s, ~currentFile.standardizePath, 0);
 
 ////////////////////////////////////
 // SynthDef Definition - \soundinMono, \rec, \play, \picthShifter, \mixer
@@ -258,15 +257,14 @@ OSCdef(\fx1, {|msg, time, addr, port|
 		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
 		~startup = false;
 		~pitchshifter.map(\pshift, ~pitchRatio);
-//		~delay.map(\delaytime, ~delTime);
+		~fxCount = 0;
 	} {
 		if (msg[1]==1) {
-//			~mixer.set(\outBus, 0);
 			~fxCount = ~fxCount - 1;
 			if (~fxCount == 0) {
 				~mixer.set(\inBus, ~sampleOut);
 			};
-			~pitchshifter.set(\outBus, ~mute);
+			~pitchshifter.set(\inBus, ~mute);
 			"FX 1 (pitch shifter) off!".postln;
 			~fxCount.postln;
 		} {
@@ -285,7 +283,7 @@ OSCdef(\fx2, {|msg, time, addr, port|
 		if (~fxCount == 0) {
 			~mixer.set(\inBus, ~sampleOut);
 		};
-		~delay.set(\outBus, ~mute);
+		~delay.set(\inBus, ~mute);
 		"FX 2 (delay) off!".postln;
 		~fxCount.postln;
 	} {
@@ -293,7 +291,6 @@ OSCdef(\fx2, {|msg, time, addr, port|
 		~fxCount = ~fxCount + 1;
 		~mixer.set(\inBus, ~fxBus);
 		~delay.set(\inBus, ~sampleOut, \outBus, ~fxBus);
-//		~delay.set(\delaytime, 0.2);
 		"FX 2 (delay) on!".postln;
 		~fxCount.postln;
 	};

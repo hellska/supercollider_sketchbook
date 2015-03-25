@@ -5,7 +5,7 @@ s.meter
 // Change Synth and MIDI Func
 
 ~simple.value;
-~rumble.value; //mono sistemare
+~rumble.value;
 ~randomDelay.value;
 ~ranDelaySwipe.value;
 // N E W !!!
@@ -26,6 +26,7 @@ s.meter
 ~changeFolder.value("20150127", "aiff");
 ~changeFolder.value("sonicTailors", "aiff"); // italian word from factory workers of Marghera
 
+~fxCount = 0;
 // change input volume
 ~inputVol = 0.9;
 // print current folder
