@@ -48,7 +48,7 @@ OSCdef(\playBlueNote, {|msg, addr, time, port|
 	~glitchFFTbuf.getToFloatArray(action: { |data|
 		var x, z;
 		z = data.clump(2).flop;
-		x = Array.newFrom(z[0]).normalize(1,100);
+		x = Array.newFrom(z[0]).normalize(0,1);
 		~image_control_center.sendMsg("/greenFFT", *x);
 	});
 };
@@ -62,7 +62,7 @@ OSCdef(\playBlueNote, {|msg, addr, time, port|
 		var x, z;
 		z = data.clump(2).flop;
 		//  Initially data is in complex form
-		x = Array.newFrom(z[0]).normalize(1,100);
+		x = Array.newFrom(z[0]).normalize(0,1);
 		~image_control_center.sendMsg("/blueFFT", *x);
 	});
 };
