@@ -43,6 +43,11 @@ s.meter
 ~bufDrumkit[34].numFrames;
 ~bufDrumkit[64].play;
 
+// soundFile for Tic (Giorgio gaber)
+
+~ticGaber.size;
+~ticGaber[1].play;
+
 ///////////// M I D I //////////////////////////////
 MIDIClient.init;
 ///////////// C O N N E C T   M I D I   D E V I C E ////////////////////

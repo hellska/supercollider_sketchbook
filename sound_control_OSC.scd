@@ -50,6 +50,7 @@ OSCdef(\playBlueNote, {|msg, addr, time, port|
 		z = data.clump(2).flop;
 		x = Array.newFrom(z[0]).normalize(0,1);
 		~image_control_center.sendMsg("/greenFFT", *x);
+
 	});
 };
 ~playBlueNote = {|freq|
@@ -64,6 +65,8 @@ OSCdef(\playBlueNote, {|msg, addr, time, port|
 		//  Initially data is in complex form
 		x = Array.newFrom(z[0]).normalize(0,1);
 		~image_control_center.sendMsg("/blueFFT", *x);
+		// postln("Sent blue array - max: "++x.maxItem++" - min: "++x.minItem);
+		postln("Sent blue array");
 	});
 };
 )

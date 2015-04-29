@@ -1,6 +1,7 @@
 (
 // USE clang01 e clang02 sounds
-~bufDrumkit = SoundFile.collectIntoBuffers(path: "/Volumes/ssdData/Industrial-autoprodotti/*".standardizePath);
+// look into soundfileCollections.scd for the buffer loaded
+// ~bufDrumkit = SoundFile.collectIntoBuffers(path: "/Volumes/ssdData/Industrial-autoprodotti/*".standardizePath);
 // Simulate writing
 ~typewriter = Task({
 	inf.do({|idx|

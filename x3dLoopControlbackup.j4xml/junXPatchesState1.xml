@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<State1>
+    <COMMENT>
+        <!--*************************************************************-->
+        <!-- HID Patch  :         -->
+        <!-- <ExamplePatch>                                              -->
+        <!--     <Patch>a1(=0) | a2 | a3 | a4</Patch>                    -->
+        <!--     <HIDSource>                                             -->
+        <!--         <DevID>b1 | b2 | b3 | b4 | b5</DevID>               -->
+        <!--         <General>c1 | c2 | c3 | c4 | c5 | c6 | c7</General> -->
+        <!--     </HIDSource>                                            -->
+        <!-- </ExamplePatch>                                             -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!--                                                             -->
+        <!-- Midi Event Patch  :  -->
+        <!-- <ExamplePatch>                                              -->
+        <!--     <Patch>a1(=1) | a2 | a3 | a4</Patch>                    -->
+        <!--     <MIDISource>d1 | d2 | d3 | d4</MIDISource>              -->
+        <!-- </ExamplePatch>                                             -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!--                                                             -->
+        <!-- Timer Patch  :       -->
+        <!-- <ExamplePatch>                                              -->
+        <!--     <Patch>a1(=2) | a2 | a3 | a4</Patch>                    -->
+        <!-- </ExamplePatch>                                             -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!--                                                             -->
+        <!-- OSCMessage Patch  :  -->
+        <!-- <ExamplePatch>                                              -->
+        <!--     <Patch>a1(=3) | a2 | a3 | a4</Patch>                    -->
+        <!-- </ExamplePatch>                                             -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!--                                                             -->
+        <!-- WiiRemote Patch  :  -->
+        <!-- <ExamplePatch>                                              -->
+        <!--     <Patch>a1(=4) | a2 | a3 | a4 | a5</Patch>               -->
+        <!-- </ExamplePatch>                                             -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!--                                                             -->
+        <!--                                                             -->
+        <!-- Audio input Patch  :  -->
+        <!-- <ExamplePatch>                                              -->
+        <!--     <Patch>a1(=4) | a2 | a3 | a4 | a6</Patch>               -->
+        <!-- </ExamplePatch>                                             -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!--                                                             -->
+        <!--  INDEX :                            -->
+        <!-- a1 :  patchSrcType         (int)    -->
+        <!--       0 = HID;   1 = Midi Event;    -->
+        <!--       2 = Timer; 3 = OSCMsg;        -->
+        <!--       4 = Wii Remote sensor         -->
+        <!--       5 = Audio input sensor        -->
+        <!-- a2 :  patchSrcTimerID      (int)    -->
+        <!-- a3 :  patchSrcOSCMessageID (int)    -->
+        <!-- a4 :  patchActNr           (int)    -->
+        <!-- a5 :  patchSrcWiiElemID	       (int)    -->
+        <!-- a6 :  patchSrcAudioID      (int)    -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!-- b1 :  devVendorID          (long)   -->
+        <!-- b2 :  devProdunctID        (long)   -->
+        <!-- b3 :  devLocID             (long)   -->
+        <!-- b4 :  devProduct           (string) -->
+        <!-- b5 :  hsrcCookie           (int)    -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!-- c1 :  hsrcName             (string) -->
+        <!-- c2 :  hsrcListID           (int)    -->
+        <!-- c3 :  hsrcUsage            (long)   -->
+        <!-- c4 :  hsrcUsagePage        (long)   -->
+        <!-- c5 :  hsrcSteim            (int)    -->
+        <!-- c6 :  hsrcSteimID          (int)    -->
+        <!-- c7 :  hsrcIdentical        (int)    -->
+        <!-- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -->
+        <!-- d1 :  msrcName             (string) -->
+        <!-- d2 :  msrcChannel          (int)    -->
+        <!-- d3 :  msrcStatus           (int)    -->
+        <!-- d4 :  msrcPortID           (int)    -->
+        <!--*************************************************************-->
+        <!--                                                             -->
+        <!-- CONFIGURATION PATCHES:                                      -->
+        <!--                                                             -->
+    </COMMENT>
+    <gMaxStates>1</gMaxStates>
+    <gMaxPatches_i>17</gMaxPatches_i>
+    <Patch1>
+        <Patch>0 | 0 | 0 | 0 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 4</DevID>
+            <General>Button #1 | 6 | 1 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch1>
+    <Patch2>
+        <Patch>0 | 0 | 0 | 1 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 5</DevID>
+            <General>Button #2 | 6 | 2 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch2>
+    <Patch3>
+        <Patch>0 | 0 | 0 | 2 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 17</DevID>
+            <General>Y-Axis | 6 | 49 | 1 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch3>
+    <Patch4>
+        <Patch>0 | 0 | 0 | 10 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 16</DevID>
+            <General>X-Axis | 6 | 48 | 1 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch4>
+    <Patch5>
+        <Patch>0 | 0 | 0 | 3 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 10</DevID>
+            <General>Button #7 | 6 | 7 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch5>
+    <Patch6>
+        <Patch>0 | 0 | 0 | 4 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 11</DevID>
+            <General>Button #8 | 6 | 8 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch6>
+    <Patch7>
+        <Patch>0 | 0 | 0 | 5 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 12</DevID>
+            <General>Button #9 | 6 | 9 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch7>
+    <Patch8>
+        <Patch>0 | 0 | 0 | 6 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 13</DevID>
+            <General>Button #10 | 6 | 10 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch8>
+    <Patch9>
+        <Patch>0 | 0 | 0 | 7 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 14</DevID>
+            <General>Button #11 | 6 | 11 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch9>
+    <Patch10>
+        <Patch>0 | 0 | 0 | 8 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 15</DevID>
+            <General>Button #12 | 6 | 12 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch10>
+    <Patch11>
+        <Patch>0 | 0 | 0 | 9 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 18</DevID>
+            <General>Hatswitch | 6 | 57 | 1 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch11>
+    <Patch12>
+        <Patch>0 | 0 | 0 | 11 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 19</DevID>
+            <General>Z-Rotation | 6 | 53 | 1 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch12>
+    <Patch13>
+        <Patch>0 | 0 | 0 | 12 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 8</DevID>
+            <General>Button #5 | 6 | 5 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch13>
+    <Patch14>
+        <Patch>0 | 0 | 0 | 13 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 6</DevID>
+            <General>Button #3 | 6 | 3 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch14>
+    <Patch15>
+        <Patch>0 | 0 | 0 | 14 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 7</DevID>
+            <General>Button #4 | 6 | 4 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch15>
+    <Patch16>
+        <Patch>0 | 0 | 0 | 15 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 9</DevID>
+            <General>Button #6 | 6 | 6 | 9 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch16>
+    <Patch17>
+        <Patch>0 | 0 | 0 | 16 | 0 | 0 | 0</Patch>
+        <HIDSource>
+            <DevID>1133 | 49685 | -49152000 | Logitech Extreme 3D | 20</DevID>
+            <General>Slider | 6 | 54 | 1 | 0 | 516 | 0</General>
+        </HIDSource>
+    </Patch17>
+</State1>

@@ -42,11 +42,6 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~recordBuff = Buffer.alloc(s, 65536);
 ~currentFile = "~/x3dLooper/x3dL_default.aiff";
 ~playBuff = Buffer.read(s, ~currentFile.standardizePath, 0);
-///////// F Control
-~fx1 = 0;
-~fx2 = 0;
-~fx3 = 0;
-~fx4 = 0;
 
 ////////////////////////////////////
 // SynthDef Definition - \soundinMono, \rec, \play, \picthShifter, \mixer
@@ -89,20 +84,6 @@ SynthDef.new(\mixer, {|inBus, outBus = 0|
 	var source;
 	source = In.ar(inBus, 2);
 	Out.ar(outBus, source)
-}).send(s);
-// granulator on current buffer
-SynthDef.new(\granulaSample, {
-	|dur = 0.1,
-	ratio = 1,
-	maxGrains = 30,
-	outBus = 0,
-	sndBuf,
-	overlap = 0.1,
-	amp = 0.7|
-	var env, source, out;
-	source = GrainBuf.ar(2, Impulse.ar(ratio/dur-overlap), dur, sndBuf, SinOsc.kr(23)+1/2, maxGrains: maxGrains);
-	out = Resonz.ar(source, Saw.kr(0.5)*200+300);
-	Out.ar(outBus, out)
 }).send(s);
 ////////////////////////////////////
 // Functions - ~play, ~rec, ~stop
@@ -268,48 +249,36 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 	'/jXcontrol/9'
 );
 // perform startup on first clik and fx 1 on/off
-~fx1func = {|in|
-
-		if (~startup) {
+OSCdef(\fx1, {|msg, time, addr, port|
+	if (~startup) {
 		"Starting default Synths and values mapping.......".postln;
 		~pitchshifter = Synth.new(\picthShifter, [\inBus, ~sampleOut, \pshift, 2.3, \outBus, ~mute], addAction: \addToTail);
 		~delay = Synth.new(\deldelay, [\inBus, ~sampleOut, \outBus, ~mute, \delaytime, 0.2], addAction: \addToTail);
 		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
 		~startup = false;
 		~pitchshifter.map(\pshift, ~pitchRatio);
-//		~fxCount = 0;
+		~fxCount = 0;
 	} {
-		if (in==1) {
-			if (~fx1 == 1) {
-				~fxCount = ~fxCount - 1;
-				if (~fxCount == 0) {
-					~mixer.set(\inBus, ~sampleOut);
-				};
-				~pitchshifter.set(\inBus, ~mute);
-				"FX 1 (pitch shifter) off!".postln;
-				~fxCount.postln;
-				~fx1 = 0;
-			}
+		if (msg[1]==1) {
+			~fxCount = ~fxCount - 1;
+			if (~fxCount == 0) {
+				~mixer.set(\inBus, ~sampleOut);
+			};
+			~pitchshifter.set(\inBus, ~mute);
+			"FX 1 (pitch shifter) off!".postln;
+			~fxCount.postln;
 		} {
-			if (~fx1 != 1) {
-				~fxCount = ~fxCount + 1;
-				~mixer.set(\inBus, ~fxBus);
-				~pitchshifter.set(\inBus, ~sampleOut, \outBus, ~fxBus);
-				"FX 1 (pitch shifter) on!".postln;
-				~fxCount.postln;
-				~fx1 = 1;
-			}
+			~fxCount = ~fxCount + 1;
+			~mixer.set(\inBus, ~fxBus);
+			~pitchshifter.set(\inBus, ~sampleOut, \outBus, ~fxBus);
+			"FX 1 (pitch shifter) on!".postln;
+			~fxCount.postln;
 		};
 	};
-};
-OSCdef(\fx1, {|msg, time, addr, port|
-
-	~fx1func.value(msg[1]);
-
 }, '/jXcontrol/fx1');
 // second fx
-~fx2func = {|in|
-	if (in==1) {
+OSCdef(\fx2, {|msg, time, addr, port|
+	if (msg[1]==1) {
 		~fxCount = ~fxCount - 1;
 		if (~fxCount == 0) {
 			~mixer.set(\inBus, ~sampleOut);
@@ -317,7 +286,6 @@ OSCdef(\fx1, {|msg, time, addr, port|
 		~delay.set(\inBus, ~mute);
 		"FX 2 (delay) off!".postln;
 		~fxCount.postln;
-		~fx2 = 0;
 	} {
 		~delay.map(\delaytime, ~delTime);
 		~fxCount = ~fxCount + 1;
@@ -325,34 +293,8 @@ OSCdef(\fx1, {|msg, time, addr, port|
 		~delay.set(\inBus, ~sampleOut, \outBus, ~fxBus);
 		"FX 2 (delay) on!".postln;
 		~fxCount.postln;
-		~fx2 = 1;
 	};
-};
-OSCdef(\fx2, {|msg, time, addr, port|
-
-	~fx2func.value(msg[1]);
-
 }, '/jXcontrol/fx2');
-// third fx
-OSCdef(\fx3, {|msg, time, addr, port|
-
-	var thisBuf;
-	msg[1].postln; 	// Type new code here
-	~sampleSelection.value(~currentSampleNo);
-	// add grainBuf here
-	// insert a gentle fade out when switch off the instrument
-
-}, '/jXcontrol/fx3');
-// fourth fx
-OSCdef(\fx4, {|msg, time, addr, port|
-
-
-
-	msg[1].postln; 	// Type new code here
-
-
-
-}, '/jXcontrol/fx4');
 // select sample folder
 ~changeFolder = {|folder, ext|
 ~currentFolder = "~/x3dLooper/"++folder++"/";
