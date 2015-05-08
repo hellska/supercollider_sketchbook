@@ -173,10 +173,14 @@ OSCdef(\startPos, {|msg, time, addr, port|
 		{4} { ~startPos = (msg[1] * ~playBuff4.numFrames).floor.asInt }
 		{5} { ~startPos = (msg[1] * ~playBuff5.numFrames).floor.asInt }
 		{6} { ~startPos = (msg[1] * ~playBuff6.numFrames).floor.asInt };
+	// set the cursor of the viewer
+	~cursorBus.set(msg[1]);
 	},
+
 	'/jXcontrol/3'
 );
 // Sample panpot control
+//// set here the buffer
 OSCdef(\panpot, {|msg, time, addr, port|
 	~panpot = msg[1] * 2 - 1; // change range -1/1
 	}, '/jXcontrol/Xaxis'
