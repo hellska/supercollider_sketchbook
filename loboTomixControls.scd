@@ -25,7 +25,8 @@ s.meter
 ~changeFolder.value("20141026", "aiff");
 ~changeFolder.value("20150127", "aiff");
 ~changeFolder.value("sonicTailors", "aiff"); // italian word from factory workers of Marghera
-~changeFolder.value("20150506", "aiff");
+~changeFolder.value("20150517", "aiff");
+~changeFolder.value("prove20150518", "aiff");
 // 20150506
 ~fxCount = 0;
 // change input volume

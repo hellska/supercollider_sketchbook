@@ -63,7 +63,7 @@ v.keyDownAction_{|i, char|
 ~lobo_CurrentSoundFileList = ~bufDrumkit;
 //// List the available sound file lists
 ~lobo_Popup = PopUpMenu(~loboMain, Rect(280, 38, 150, 22))
-.items_(["Drum kit", "Tic Gaber"])
+.items_(["Drum kit", "Tic Gaber", "900 voices"])
 .action_({|me| me.value.postln;
 	switch (me.value,
 		0, { ~setListViewContent.value(~bufDrumkit);
@@ -71,6 +71,9 @@ v.keyDownAction_{|i, char|
 		},
 		1, { ~setListViewContent.value(~ticGaber);
 			~lobo_CurrentSoundFileList = ~ticGaber;
+		},
+		2, { ~setListViewContent.value(~mwvoices900);
+			~lobo_CurrentSoundFileList = ~mwvoices900;
 		}
 	);
 });
@@ -190,6 +193,7 @@ v.keyDownAction_{|i, char|
 			~grainAr[~synthIndex].get(\rate, {|a| {~nboxes[2].valueAction_(a)}.defer});
 			~grainAr[~synthIndex].get(\amp, {|a| {~vol.valueAction_(a)}.defer});
 			~smSynt[~synthIndex].focus(true);
+			~grainAr[~synthIndex].get(\speed, {|au| {~grain_speed.string_(au)}.defer});
 		};
 	});
 	//// Stop All Synths with gate (gently stops)
@@ -214,23 +218,36 @@ v.keyDownAction_{|i, char|
 	.align_('\center')
 	.action_({|me|
 		~synthIndex = me.string.asInt;
-		~grainAr[~synthIndex].get(\ratio, {|a| { ~nboxes[0].valueAction_(a)}.defer});
-		~grainAr[~synthIndex].get(\dur, {|a| {~nboxes[1].valueAction_(a)}.defer});
-		~grainAr[~synthIndex].get(\rate, {|a| {~nboxes[2].valueAction_(a)}.defer});
-		~grainAr[~synthIndex].get(\amp, {|a| {~vol.valueAction_(a)}.defer});
+		~grainAr[~synthIndex].get(\ratio, {|au| { ~nboxes[0].valueAction_(au)}.defer});
+		~grainAr[~synthIndex].get(\dur, {|au| {~nboxes[1].valueAction_(au)}.defer});
+		~grainAr[~synthIndex].get(\rate, {|au| {~nboxes[2].valueAction_(au)}.defer});
+		~grainAr[~synthIndex].get(\amp, {|au| {~vol.valueAction_(au)}.defer});
 		~smSynt[~synthIndex].focus(true);
+		// added this
+		~grainAr[~synthIndex].get(\speed, {|au| {~grain_speed.string_(au)}.defer});
 	});
 	// generate the matrix to control the synths
 ////////////////
 ////////////////
 ////////////////
+
+	~grain_speed = NumberBox(~w1,Rect(440,110,30,30))
+	.string_(2)
+	.action_({|me|
+		~grainAr[~synthIndex].set(\speed, me.value)
+	});
+
 	~synthMatrix = CompositeView(~w1, Rect(275,10,155,155)).background_(Color.cyan);
 	~smSynt = Array.new(~grainMax);
 	~matrixCols = 5;
 	~matrixrows = ~grainMax / ~matrixCols;
 	~matrixrows.do({|index|
+		var row = index;
+		("index to func: "+index).postln;
 		~matrixCols.do({|idx|
-			var base,altezza,bordoDestro,bordoSuperiore,xcoord,ycoord;
+			var base,altezza,bordoDestro,bordoSuperiore,xcoord,ycoord,element;
+			element = idx + (row * 5);
+			("element to func: "+element).postln;
 			base = 25;
 			altezza = 25;
 			bordoDestro = 5;
@@ -248,13 +265,13 @@ v.keyDownAction_{|i, char|
 				.action_({|act|
 					switch (act.value,
 						0, {"mando in play".postln;
-							~grainAr[idx].set(\amp, 0.7);
+							~grainAr[element].set(\amp, 0.7);
 							act.value = 1;
-							~synthIndex = idx;
-							~activeNumberViewer.value_(idx)
+							~synthIndex = element;
+							~activeNumberViewer.value_(element)
 						},
 						1, {"synth non attivo".postln; act.value = 0},
-						2, {"metto in pausa".postln; ~grainAr[idx].set(\amp, 0)}
+						2, {"metto in pausa".postln; ~grainAr[element].set(\amp, 0)}
 					);
 //				~synthIndex = idx; ~synthIndex.postln;
 				})
@@ -333,7 +350,10 @@ v.keyDownAction_{|i, char|
 	~x3d_fileView.refresh;                  // refresh to display the file.
 	~x3d_fileView.timeCursorPosition_(~x3d_soundFile.numFrames/2);
 	//// control bus to store cursor values
-	~cursorBus = Bus.control(s,1);
+/*	~x3d_state = Button(~w1, Rect(10,210,60,20))
+	.states_([["INACTIVE",Color.white,Color.gray],["ACTIVE",Color.green,Color.black]]);
+	~x3d_state = Button(~w1, Rect(10,210,60,20))
+*/
 	//// Synth that writes on control bus - It should be stopped and restarted when soundFile changes
 /*
 	~cursorPlay = {
@@ -369,10 +389,70 @@ v.keyDownAction_{|i, char|
 			Out.kr(~cursorBus, cursorVal)
 		}.play;
 */
+
+
 	};
 
 
 }; //// end of function ~x3d_guiCreator
 
+~lobo_score = {|title, parent, pcolor|
+	~score_main = CompositeView(parent,Rect(690,60,140,700))
+	.background_(pcolor);
+	~score_label = StaticText(~score_main,Rect(10,0,130,20))
+	.string_(title)
+	.stringColor_(Color.red);
+	~score_text = TextView(~score_main,Rect(10,20,130,200))
+	.string_(title+" edit");
+/*
+
+	~grainAr[~synthIndex].get(\ratio, {|a| { ~nboxes[0].valueAction_(a)}.defer});
+	~grainAr[~synthIndex].get(\dur, {|a| {~nboxes[1].valueAction_(a)}.defer});
+	~grainAr[~synthIndex].get(\rate, {|a| {~nboxes[2].valueAction_(a)}.defer});
+	~grainAr[~synthIndex].get(\amp, {|a| {~vol.valueAction_(a)}.defer});
+	~grainAr[~synthIndex].get(\speed, {|au| {~grain_speed.string_(au)}.defer});
+*/
+	~score_getSynthValues = Button(~score_main,Rect(10,230,130,20))
+	.states_([["Get Synth Values",Color.grey,Color.black]])
+	.action_({|me|
+		{~score_text.setString(("\n"+~synthIndex),~score_text.string.size)}.defer;
+		~grainAr[~synthIndex].get(\ratio,
+			{|inget|
+				{~score_text.setString((":"+inget),~score_text.string.size)}
+				.defer
+			}
+		);
+		~grainAr[~synthIndex].get(\dur,
+		{|inget|
+				{~score_text.setString((","+inget),~score_text.string.size)}
+				.defer
+			}
+		);
+		~grainAr[~synthIndex].get(\rate,
+		{|inget|
+				{~score_text.setString((","+inget),~score_text.string.size)}
+				.defer
+			}
+		);
+		~grainAr[~synthIndex].get(\amp,
+		{|inget|
+			{~score_text.setString((","+inget),~score_text.string.size)}
+			.defer
+		}
+		);
+		~grainAr[~synthIndex].get(\speed,
+		{|inget|
+			{~score_text.setString((","+inget),~score_text.string.size)}
+			.defer
+		}
+		);
+
+
+	});
+};
+
+
+
 ~grainbuff_guiCreator.value(3, "GrainBuff", ~loboMain);
 ~x3d_guiCreator.value("x3d Looper", ~loboMain);
+~lobo_score.value("score",~loboMain, Color.black);

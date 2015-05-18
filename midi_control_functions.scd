@@ -47,7 +47,7 @@ MIDIIn.removeFuncFrom(\noteOn, ~noteOn);
 	var pitch, velo;
     pitch = num; //.midicps;
 	velo = (vel / 127.0) * 1.5;
-		Synth(~synth, [\minFreq, pitch.midicps, \dur, ~dur]);
+	Synth(~synth, [\minFreq, pitch.midicps, \dur, ~dur]);
 };
 MIDIIn.addFuncTo(\noteOn, ~noteOn);
 };
@@ -124,3 +124,39 @@ MIDIIn.removeFuncFrom(\noteOn, ~noteOn);
 MIDIIn.addFuncTo(\noteOn, ~noteOn);
 };
 )
+/*
+~drumming = {|status|
+MIDIIn.removeFuncFrom(\noteOn, ~noteOn);
+// change this variable to select the correct synth
+~synth = "\granulaSample";
+~bufDrumkit = SoundFile.collectIntoBuffers(path: "/Volumes/ssdData/Industrial-autoprodotti/*".standardizePath);
+
+	// Aggiunge un gruppo ed una serie di Synth ad un Array
+~grainGroup = Group.new;
+~grainAr = Array.new(10);
+// use this as many times as you want
+// check the array size
+~grainAr.size;
+// remove first element
+~grainAr.removeAt(0).set(\gate, 0);
+// set the grain output
+~grainAr[0].set(\gate, 0);
+// pass ratio in bpm
+~grainAr[0].set(\ratio, 220);
+// print all elements
+~grainAr.do({|el, idx| idx.post; " ".post; el.postln });
+// fade out all the synths
+~grainGroup.set(\gate, 0);
+~grainGroup.set(\ratio, 420);
+
+~noteOn = {arg src, chan, num, vel;
+	var pitch, velo;
+    pitch = num; //.midicps;
+	velo = (vel / 127.0) * 1.5;
+	~grainAr.add(Synth(\granulaSample, [\sndBuf, ~bufDrumkit[rand(~bufDrumkit.size-1)]], ~grainGroup, \addToHead));
+	Synth(~synth, [\freq, pitch.midicps]);
+};
+MIDIIn.addFuncTo(\noteOn, ~noteOn);
+};
+**/
+

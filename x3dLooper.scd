@@ -36,8 +36,9 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~fxCount = 0;
 ~inputVol = 0.9;
 ///////// Control Bus
-~pitchRatio = Bus.control(s, 1);
-~delTime = Bus.control(s, 1);
+~pitchRatio = Bus.control(s,1);
+~delTime = Bus.control(s,1);
+~cursorBus = Bus.control(s,1);
 ///////// Buffers
 ~recordBuff = Buffer.alloc(s, 65536);
 ~currentFile = "~/x3dLooper/x3dL_default.aiff";
@@ -47,6 +48,8 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~fx2 = 0;
 ~fx3 = 0;
 ~fx4 = 0;
+
+// ~x3d_updateSoundFile
 
 ////////////////////////////////////
 // SynthDef Definition - \soundinMono, \rec, \play, \picthShifter, \mixer
@@ -227,6 +230,7 @@ OSCdef(\inputSource, {|msg, time, addr, port|
 		{5} {~playBuff5 = Buffer.read(s, ~currentFile.standardizePath).normalize }
 		{6} {~playBuff6 = Buffer.read(s, ~currentFile.standardizePath).normalize };
 	~currentSampleNo = sampleNo;
+	{ ~x3d_updateSoundFile.value(~currentFile.standardizePath) }.defer;
 };
 
 OSCdef(\selsample1, {|msg, time, addr, port|
