@@ -50,12 +50,19 @@ v.keyDownAction_{|i, char|
 	// [sbs.value, ~ticView.items[sbs.value]].postln; // .value returns the integer
 	~info = ~fileInfo.value(sbs.value, ~lobo_CurrentSoundFileList);
 	~ticInfo.string = ~info;
+	// update the file viewer
 	if (~ticViewButton.value == 1) {
+		~x3d_updateSoundFile.value(~lobo_CurrentSoundFileList[sbs.value].path.standardizePath);
+	};
+	// set the sample of x3dlooper if external src is enabled (Button in ~x3dViewer)
+	if (~x3d_externalSample.value == 1) {
+		~currentSampleNo = 0;
+		~playBuff = ~lobo_CurrentSoundFileList[~ticView.value];
 		~x3d_updateSoundFile.value(~lobo_CurrentSoundFileList[sbs.value].path.standardizePath);
 	};
 }).keyDownAction_({|i, char, uni, key|
 	if ( key == 13 ) {
-		~ticPlay.focus(true)
+		~lobo_CurrentSoundFileList[~ticView.value].play
 	}
 });
 // populate the list with the default soundFile buffer
@@ -243,11 +250,11 @@ v.keyDownAction_{|i, char|
 	~matrixrows = ~grainMax / ~matrixCols;
 	~matrixrows.do({|index|
 		var row = index;
-		("index to func: "+index).postln;
+//		("index to func: "+index).postln;
 		~matrixCols.do({|idx|
 			var base,altezza,bordoDestro,bordoSuperiore,xcoord,ycoord,element;
 			element = idx + (row * 5);
-			("element to func: "+element).postln;
+//			("element to func: "+element).postln;
 			base = 25;
 			altezza = 25;
 			bordoDestro = 5;
@@ -339,10 +346,14 @@ v.keyDownAction_{|i, char|
 	~x3d_Label = StaticText(~x3dView, Rect(0,0,150,22))
 	.string_(title)
 	.stringColor_(Color.red);
-	~x3d_fileView = SoundFileView(~x3dView, Rect(10,22,300,178))
+	~x3d_fileView = SoundFileView(~x3dView, Rect(10,22,350,178))
 	.timeCursorOn_(true)
 	.timeCursorColor_(Color.red);
 
+	~x3d_externalSample = Button(~x3dView, Rect(370,22,90,22))
+	.states_([["Internal src",Color.black,Color.white],
+		["External src",Color.black,Color.red]]);
+	// load the default sample file of x3dlooper
 	~x3d_soundFile = SoundFile.new;
 	~x3d_soundFile.openRead(~currentFile.standardizePath);
 	~x3d_fileView.soundfile = ~x3d_soundFile;            // set soundfile

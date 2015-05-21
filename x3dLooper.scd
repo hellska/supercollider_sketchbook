@@ -230,6 +230,7 @@ OSCdef(\inputSource, {|msg, time, addr, port|
 		{5} {~playBuff5 = Buffer.read(s, ~currentFile.standardizePath).normalize }
 		{6} {~playBuff6 = Buffer.read(s, ~currentFile.standardizePath).normalize };
 	~currentSampleNo = sampleNo;
+	// show waveshape in lobotomixGUI file viewer
 	{ ~x3d_updateSoundFile.value(~currentFile.standardizePath) }.defer;
 };
 

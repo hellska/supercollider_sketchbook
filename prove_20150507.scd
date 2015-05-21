@@ -70,3 +70,28 @@ SynthDef(\imitational,{|inBus=0,gate=1|
 
 ~imi = Synth(\imitational);
 ~imi.set(\gate, 0);
+
+(
+SynthDef(\imitatioDist,{|inBus=0,gate=1,bits=16,cutoff=440,dec=2|
+	var env, in, amp, freq, hasFreq, out;
+	env = EnvGen.ar(Env.asr(0.02,0.3),gate,doneAction:2);
+	   in = Mix.new(SoundIn.ar(inBus)) * env;
+	    amp = Amplitude.kr(in, 0.05, 0.05);
+	    # freq, hasFreq = Pitch.kr(in, ampThreshold: 0.01, median: 7);
+	    //freq = Lag.kr(freq.cpsmidi.round(1).midicps, 0.05);
+//	    out = Mix.new(SinOsc.ar(freq / 2,mul: amp));
+//	out = Decimator.ar(in,bits).dup;
+	out = Disintegrator.ar(in,0.5,amp);// + Mix.new(SinOsc.ar(freq / 2,mul: amp));
+	out = LPF.ar(Compander.ar(out),cutoff);
+	    3.do({
+		        out = AllpassN.ar(out, 0.040, [0.040.rand,0.040.rand], dec)
+	    });
+	    Out.ar(0,out)
+}).send(s)
+)
+s.queryAllNodes;
+~aimi = Synth(\imitatioDist);
+~aimi.free;
+~aimi.set(\cutoff,5660);
+~aimi.set(\gate, 0);
+~aimi.set(\dec, 5);
