@@ -29,6 +29,7 @@ s.meter
 ~changeFolder.value("prove20150518", "aiff");
 ~changeFolder.value("pasta_ravel_06", "aiff");
 ~changeFolder.value("20150520", "aiff");
+~changeFolder.value("20150524", "aiff");
 
 // 20150506
 ~fxCount = 0;

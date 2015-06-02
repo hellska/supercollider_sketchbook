@@ -22,22 +22,22 @@ s.meter;
 // Set the main window
 ~loboMain = Window("Lobotomix Controls").setTopLeftBounds(Rect(600,0,840,900)).front ;
 ~mainVol = s.volume.gui(~loboMain);
-v = TextField(~loboMain, Rect(80,10,50,22)).focus(true) ;
+~synth_list = TextField(~loboMain, Rect(80,10,50,22)).focus(true) ;
 //v.align_(\center);
-l = TextField(~loboMain, Rect(135,10,220,22)) ;
-l.string = "Select a Synth";
+~synth_active = TextField(~loboMain, Rect(135,10,220,22))
+.string_("Select a Synth");
 // keyboard input
-v.keyDownAction_{|i, char|
+~synth_list.keyDownAction_{|i, char|
 	char.switch(
-		$1, { ~simple.value; l.string = "MIDI Func: ~simple"  },
-		$2, { ~rumble.value; l.string = "MIDI Func: ~rumble" },
-		$3, { ~randomDelay.value; l.string = "MIDI Func: ~randomDelay" },
-		$4, { ~ranDelaySwipe.value; l.string = "MIDI Func: ~ranDelaySwipe" },
-		$5, { ~particleSin.value; l.string = "Synth Selected: ~particleSin" },
-		$6, { ~greenGlitch.value; l.string = "Synth Selected: ~greenGlitch" },
-		$7, { ~rumbledrone.value; l.string = "Synth Selected: ~rumbledrone" }
+		$1, { ~simple.value; ~synth_active.string = "MIDI Func: ~simple"  },
+		$2, { ~rumble.value; ~synth_active.string = "MIDI Func: ~rumble" },
+		$3, { ~randomDelay.value; ~synth_active.string = "MIDI Func: ~randomDelay" },
+		$4, { ~ranDelaySwipe.value; ~synth_active.string = "MIDI Func: ~ranDelaySwipe" },
+		$5, { ~particleSin.value; ~synth_active.string = "Synth Selected: ~particleSin" },
+		$6, { ~greenGlitch.value; ~synth_active.string = "Synth Selected: ~greenGlitch" },
+		$7, { ~rumbledrone.value; ~synth_active.string = "Synth Selected: ~rumbledrone" }
 	);
-	v.string = ""
+	~synth_list.string = ""
 };
 //c = ListView(w, rect(5, 30, 50, 22)).items_(["1", "s", "e"]);
 ~ticLabel = StaticText(~loboMain, Rect(80, 42, 300, 22))
@@ -407,6 +407,31 @@ v.keyDownAction_{|i, char|
 
 }; //// end of function ~x3d_guiCreator
 
+//// tap tempo GUI
+~tapTempoGuiCreator = {|title,parent|
+	~tapTempo_view = CompositeView(parent, Rect(80,690,600,130)); //.background_(Color.red);
+
+	~lastTap = nil;
+	~tapTempo = {
+		var estim;
+        ~lastTap.isNil.if({~lastTap = Main.elapsedTime}, {
+                estim = Main.elapsedTime;
+                r = 60 / (estim - ~lastTap);
+                ~lastTap = estim;
+                ~tapTempo_text.string_("Tempo is : "++r.round(0.01)++" BPM")
+                })
+        };
+	~tapTempo_tapButton = Button.new(~tapTempo_view, Rect(10, 10, 300, 100))
+	.states_([
+		["Press me, or the space bar", Color.black, Color.grey]
+	])
+    .action_({~tapTempo.value});
+	~tapTempo_text = StaticText.new(~tapTempo_view, Rect(320, 50, 200, 30))
+    .string_("No tempo")
+    .font_(Font("Monaco", 15));
+
+};
+
 ~lobo_score = {|title, parent, pcolor|
 	~score_main = CompositeView(parent,Rect(690,60,140,700))
 	.background_(pcolor);
@@ -466,4 +491,5 @@ v.keyDownAction_{|i, char|
 
 ~grainbuff_guiCreator.value(3, "GrainBuff", ~loboMain);
 ~x3d_guiCreator.value("x3d Looper", ~loboMain);
+~tapTempoGuiCreator.value("", ~loboMain);
 ~lobo_score.value("score",~loboMain, Color.black);

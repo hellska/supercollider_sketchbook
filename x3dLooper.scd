@@ -33,8 +33,11 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~sampleOut = Bus.audio(s, 2);
 ~mute = Bus.audio(s, 2);
 ~fxBus = Bus.audio(s, 2);
+~pitchBus = Bus.audio(s, 2);
+~delayBus = Bus.audio(s, 2);
 ~fxCount = 0;
 ~inputVol = 0.9;
+~maxDelTime = 4;
 ///////// Control Bus
 ~pitchRatio = Bus.control(s,1);
 ~delTime = Bus.control(s,1);
@@ -48,6 +51,9 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~fx2 = 0;
 ~fx3 = 0;
 ~fx4 = 0;
+//// audio routing
+~sampleGroup = Group.new(s, \addToHead);
+~efxGroup = Group.new(s, \addToTail);
 
 // ~x3d_updateSoundFile
 
@@ -81,10 +87,10 @@ SynthDef.new(\picthShifter, {|inBus, outBus, pshift, pRndVar = 0, trndVar = 0|
 	out = PitchShift.ar(source, 0.2, pshift, pRndVar, trndVar);
 	Out.ar(outBus, out)
 }).send(s);
-SynthDef(\deldelay, {|inBus, outBus, repeat = 15, delaytime|
+SynthDef(\deldelay, {|inBus, outBus, repeat = 15, maxDelTime = 4, delaytime|
 	var source, out;
 	source = In.ar(inBus, 2);
-	out = CombC.ar(source,maxdelaytime: delaytime + (delaytime/4) , delaytime: delaytime,decaytime: delaytime * repeat);
+	out = source + CombC.ar(source,maxdelaytime: maxDelTime, delaytime: delaytime,decaytime: delaytime * repeat);
 	Out.ar(outBus, out)
 }).send(s);
 // Otput Mixer for Al Samples
@@ -128,7 +134,7 @@ SynthDef.new(\granulaSample, {
 	r.free;
 };
 ~play = {|buffer, startPos|
-	Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut]);
+	Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut],~sampleGroup, addAction: \addToHead);
 };
 // end of Synth Def
 ////////////////////////////////////
@@ -197,7 +203,7 @@ OSCdef(\pitch, {|msg, time, addr, port|
 }, '/jXcontrol/Zrotation');
 // receive slider values
 OSCdef(\deltime, {|msg, time, addr, port|
-	~delTime.set(msg[1] * 4 + 0.02);
+	~delTime.set(msg[1] * ~maxDelTime + 0.02);
 	// (msg[1] * 4 + 0.02).postln;
 }, '/jXcontrol/slider');
 // Bus selection for Sample Recording
@@ -278,12 +284,14 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 );
 // perform startup on first clik and fx 1 on/off
 ~fx1func = {|in|
-
-		if (~startup) {
+	if (~startup) {
 		"Starting default Synths and values mapping.......".postln;
-		~pitchshifter = Synth.new(\picthShifter, [\inBus, ~sampleOut, \pshift, 2.3, \outBus, ~mute], addAction: \addToTail);
-		~delay = Synth.new(\deldelay, [\inBus, ~sampleOut, \outBus, ~mute, \delaytime, 0.2], addAction: \addToTail);
-		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut], addAction: \addToTail);
+		~pitchshifter = Synth.new(\picthShifter,
+			[\inBus, ~pitchBus, \pshift, 2.3, \outBus, ~mute],~efxGroup, addAction: \addToHead);
+		~delay = Synth.new(\deldelay,
+			[\inBus, ~delayBus, \outBus, ~mute, \delaytime, 0.2],~efxGroup,addAction: \addToTail);
+		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut],~sampleGroup, addAction: \addToTail);
+//		~fxmixer = Synth.new(\mixer, [\inBus, ~sampleOut],~sampleGroup, addAction: \addToTail);
 		~startup = false;
 		~pitchshifter.map(\pshift, ~pitchRatio);
 //		~fxCount = 0;
@@ -291,10 +299,12 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 		if (in==1) {
 			if (~fx1 == 1) {
 				~fxCount = ~fxCount - 1;
-				if (~fxCount == 0) {
-					~mixer.set(\inBus, ~sampleOut);
+				if (~fx2 == 0) {
+					~mixer.set(\outBus, 0);
+				} {
+					~mixer.set(\outBus, ~delayBus);
 				};
-				~pitchshifter.set(\inBus, ~mute);
+				~pitchshifter.set(\outBus, ~mute);
 				"FX 1 (pitch shifter) off!".postln;
 				~fxCount.postln;
 				~fx1 = 0;
@@ -302,8 +312,13 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 		} {
 			if (~fx1 != 1) {
 				~fxCount = ~fxCount + 1;
-				~mixer.set(\inBus, ~fxBus);
-				~pitchshifter.set(\inBus, ~sampleOut, \outBus, ~fxBus);
+//				~mixer.set(\inBus, ~fxBus);
+				~mixer.set(\outBus, ~pitchBus);
+				if (~fx2==0) {
+					~pitchshifter.set(\outBus, 0);
+				} {
+					~pitchshifter.set(\outBus, ~delayBus);
+				};
 				"FX 1 (pitch shifter) on!".postln;
 				~fxCount.postln;
 				~fx1 = 1;
@@ -320,18 +335,28 @@ OSCdef(\fx1, {|msg, time, addr, port|
 ~fx2func = {|in|
 	if (in==1) {
 		~fxCount = ~fxCount - 1;
-		if (~fxCount == 0) {
-			~mixer.set(\inBus, ~sampleOut);
+		if (~fx1 == 0) {
+			~mixer.set(\outBus, 0);
+		} {
+			~mixer.set(\outBus, ~pitchBus);
+			// change pitchshifter routing here
+			~pitchshifter.set(\outBus, 0);
 		};
-		~delay.set(\inBus, ~mute);
+		~delay.set(\outBus, ~mute);
 		"FX 2 (delay) off!".postln;
 		~fxCount.postln;
 		~fx2 = 0;
 	} {
 		~delay.map(\delaytime, ~delTime);
 		~fxCount = ~fxCount + 1;
-		~mixer.set(\inBus, ~fxBus);
-		~delay.set(\inBus, ~sampleOut, \outBus, ~fxBus);
+//		~mixer.set(\inBus, ~fxBus);
+		if (~fx1==0) {
+			~mixer.set(\outBus, ~delayBus);
+			~delay.set(\outBus, 0);
+		} {
+			~pitchshifter.set(\outBus, ~delayBus);
+			~delay.set(\outBus, 0);
+		};
 		"FX 2 (delay) on!".postln;
 		~fxCount.postln;
 		~fx2 = 1;

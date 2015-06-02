@@ -66,7 +66,7 @@ OSCdef(\playBlueNote, {|msg, addr, time, port|
 		x = Array.newFrom(z[0]).normalize(0,1);
 		~image_control_center.sendMsg("/blueFFT", *x);
 		// postln("Sent blue array - max: "++x.maxItem++" - min: "++x.minItem);
-		postln("Sent blue array");
+		// postln("Sent blue array");
 	});
 };
 )
