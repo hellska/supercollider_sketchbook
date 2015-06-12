@@ -17,8 +17,6 @@ This is a study repository without any warranty regards it's use and functionali
 
 GPL 2.0
 
-Copyright (c) 2012 Nicola Bernardini
-
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -35,4 +33,4 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 == README VERSION:
 
-V 1.0 - Daniele Scarano (Sat Oct  4 12:07:09 CEST 20)
+V 1.0 - Daniele Scarano (Sat Oct  4 12:07:09 CEST 20 2014)
