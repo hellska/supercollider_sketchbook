@@ -415,17 +415,28 @@ s.meter;
 	~tapTempo = {
 		var estim;
         ~lastTap.isNil.if({~lastTap = Main.elapsedTime}, {
-                estim = Main.elapsedTime;
-                r = 60 / (estim - ~lastTap);
-                ~lastTap = estim;
-                ~tapTempo_text.string_("Tempo is : "++r.round(0.01)++" BPM")
-                })
-        };
+            estim = Main.elapsedTime;
+			~taptime = estim - ~lastTap;
+			~tapbpm = 60 / (estim - ~lastTap);
+			~lastTap = estim;
+			~tapTempo_text.string_("BPM: "++~tapbpm.round(0.01)++" Time: "++~taptime.round(0.01));
+			if (~tapTempo_2Delay.value==1) {
+				if (~taptime < 4000) {
+					~delTime.set(~taptime)
+				}
+			}
+		})
+    };
 	~tapTempo_tapButton = Button.new(~tapTempo_view, Rect(10, 10, 300, 100))
 	.states_([
 		["Press me, or the space bar", Color.black, Color.grey]
 	])
     .action_({~tapTempo.value});
+	~tapTempo_2Delay = Button.new(~tapTempo_view,Rect(320,10,20,20))
+	.states_([
+		["x",Color.black,Color.gray],
+		["D",Color.black,Color.red]
+	]);
 	~tapTempo_text = StaticText.new(~tapTempo_view, Rect(320, 50, 200, 30))
     .string_("No tempo")
     .font_(Font("Monaco", 15));
@@ -448,6 +459,7 @@ s.meter;
 	~grainAr[~synthIndex].get(\amp, {|a| {~vol.valueAction_(a)}.defer});
 	~grainAr[~synthIndex].get(\speed, {|au| {~grain_speed.string_(au)}.defer});
 */
+
 	~score_getSynthValues = Button(~score_main,Rect(10,230,130,20))
 	.states_([["Get Synth Values",Color.grey,Color.black]])
 	.action_({|me|
@@ -484,6 +496,21 @@ s.meter;
 		);
 
 
+	});
+	~score_sample_folder = TextField(~score_main,Rect(10,260,130,20))
+	.value_("000000");
+	~score_samplef_button = Button(~score_main, Rect(10,290,110,20))
+	.states_([["load folder",Color.black,Color.red]])
+	.action_({|me|
+		var path;
+		path = "~/x3dLooper/"++~score_sample_folder.value;
+		// ~load_folder.value(~score_sample_folder.value,"aiff");
+//		me.value.postln();
+		~score_sample_folder.value.postln;
+		File.exists(path.standardizePath).if({
+			~changeFolder.value(~score_sample_folder.value,"aiff")
+			}
+			, { "folder does not exists!".postln });
 	});
 };
 

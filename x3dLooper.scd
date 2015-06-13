@@ -69,15 +69,18 @@ SynthDef.new(\soundinMono, {arg inBus, outBus=0,amp=0.9;
 }).send(s);
 // this will record to the disk
 SynthDef(\rec, {arg bufnum, inbus;
-    DiskOut.ar(bufnum, In.ar(inbus,1));
+	var source;
+	source = In.ar(inbus,1);
+    DiskOut.ar(bufnum, source);
 }).send(s);
 // this will play it back mono file (default panpot center)
 SynthDef(\play, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0 |
 	var source, out, env, envdur;
-	envdur = start / 44100 - 0.02;
-	env = Env.asr(attackTime:0.02,sustainLevel:0.5,releaseTime:envdur,curve:\lin);
-	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2);
-	out = Pan2.ar(source, panpot) * EnvGen.ar(env);
+	envdur = start / 44100 - 0.02 - 0.5;
+	env = Env.asr(attackTime:0.02,sustainLevel:1,releaseTime:envdur,curve:\lin);
+	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2) *
+	EnvGen.ar(env);
+	out = Pan2.ar(source, panpot);
     Out.ar(outBus, out)
 }).send(s);
 // Very simple Pitch Shifter
@@ -372,7 +375,7 @@ OSCdef(\fx3, {|msg, time, addr, port|
 
 	var thisBuf;
 	msg[1].postln; 	// Type new code here
-	~sampleSelection.value(~currentSampleNo);
+	// ~sampleSelection.value(~currentSampleNo);
 	// add grainBuf here
 	// insert a gentle fade out when switch off the instrument
 
