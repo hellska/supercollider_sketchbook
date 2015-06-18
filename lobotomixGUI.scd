@@ -353,6 +353,14 @@ s.meter;
 	~x3d_externalSample = Button(~x3dView, Rect(370,22,90,22))
 	.states_([["Internal src",Color.black,Color.white],
 		["External src",Color.black,Color.red]]);
+	~x3d_chansetup = Button(~x3dView,Rect(470,22,90,22))
+	.states_([
+		["Stereo Out",Color.black,Color.gray],
+		["4 Channel",Color.black,Color.gray]])
+	.action_({|me|
+		if (me.value==0){~setup=2; ~sliderDelay=0};
+		if (me.value==1){~setup=4; ~sliderDelay=1};
+	});
 	// load the default sample file of x3dlooper
 	~x3d_soundFile = SoundFile.new;
 	~x3d_soundFile.openRead(~currentFile.standardizePath);
