@@ -9,6 +9,9 @@
 ~ss_carestart = 0; // set if the CA restart when reach a quiet state (oscillatory states does not
 ~gridside = 18;
 
+// Improvements
+// Implement an instrument that create complex spectrum with n.do({ SinOsc ecc... })
+
 SynthDef(\singlegrain, {
 	|outbus = 0,
 	freq = 440,
@@ -89,8 +92,9 @@ SynthDef(\singlegrain, {
 
 // read column from the CA BoxGrid
 ~readcol = {|col|
-	var my2d,bfreq,freq,lenght,amp,dur;
+	var my2d,bfreq,freq,lenght,amp,dur,harmonics;
 	bfreq = ~bsfreq ; // 80;
+	harmonics = ~gridside-2;
 	freq = List[];
 	lenght = List[];
 	amp = List[];
@@ -98,25 +102,29 @@ SynthDef(\singlegrain, {
 	dur = rand(~ss_deltadur) + ~ss_mindur;
 	my2d.colAt(col).do{
 		|me,idx|
-		if (me==1) {
-			if (~freqserie==0) {
-				freq.add(~generalizedserie.value(bfreq,idx + 1,1,1,0)); // harmonic serie
-			};
-			if (~freqserie==1) {
-				freq.add(~generalizedserie.value(bfreq,idx + 1,0,1.456,0)); // geometric serie
-			};
-			if (~freqserie==2) {
-				freq.add(~generalizedserie.value(bfreq,idx + 1,1.5,1,0)); // expanded harmonic
-			};
-			if (~freqserie==3) {
-				freq.add(~generalizedserie.value(bfreq,idx + 1,0.5,1,0)); // compressed harmonic
-			};
-			// freq.add(idx + 1 * bfreq/2);
-			// different length for each sine of the column
-			// lenght.add(rand(200) + 50);
-			// same length for each grain of the column
-			lenght.add(dur);
-			amp.add(1/(idx+1));
+		if (idx>0) {
+			if (idx<=harmonics) {
+				if (me==1) {
+					if (~freqserie==0) {
+						freq.add(~generalizedserie.value(bfreq,idx + 1,1,1,0)); // harmonic serie
+					};
+					if (~freqserie==1) {
+						freq.add(~generalizedserie.value(bfreq,idx + 1,0,1.456,0)); // geometric serie
+					};
+					if (~freqserie==2) {
+						freq.add(~generalizedserie.value(bfreq,idx + 1,1.5,1,0)); // expanded harmonic
+					};
+					if (~freqserie==3) {
+						freq.add(~generalizedserie.value(bfreq,idx + 1,0.5,1,0)); // compressed harmonic
+					};
+					// freq.add(idx + 1 * bfreq/2);
+					// different length for each sine of the column
+					// lenght.add(rand(200) + 50);
+					// same length for each grain of the column
+					lenght.add(dur);
+					amp.add(1/(idx));
+				}
+			}
 		}
 	};
 	// amp = 0.5 / freq.size;
@@ -251,7 +259,7 @@ SynthDef(\singlegrain, {
 ~tas.play;
 ~tas.stop;
 
-~timestep = 0.0019;
+~timestep = 0.0219;
 ~rnd = 0.01;
 ~timestep = 0.2;
 ~ss_mindur = 40;
