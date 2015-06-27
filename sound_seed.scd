@@ -6,9 +6,15 @@
 ~timestep = 0.03; // sequencer's single step length
 ~rnd = 0.03; // randomic component of tempo (addeed to step length)
 ~freqserie = 0; // Define the default series type (0=armonic serie)
-~ss_carestart = 0; // set if the CA restart when reach a quiet state (oscillatory states does not
+~ss_carestart = 0; // set if CA restart when reach a quiet state(no oscillatory states)
 ~gridside = 18;
-
+~wolframRule = 30; // why 30?! http://mathworld.wolfram.com/Rule30.html
+~wolfCurrRow = 1;
+~wolfMaxRows = 16;
+~currca = "gol";
+~continue = 0;
+~currloop = 0;
+~maxloops = 16;
 // Improvements
 // Implement an instrument that create complex spectrum with n.do({ SinOsc ecc... })
 
@@ -23,7 +29,8 @@ SynthDef(\singlegrain, {
 	grain = SinOsc.ar([freq,freq],mul:amp) * env;
 	Out.ar(outbus, grain)
 }).send(s);
-// draw GUI
+////////////////////////
+// draw GUI objects
 ~soundseed_w = Window.new("Sound Seed", Rect(10, 500, 600, 350)).front;
 ~cagrid = BoxGrid.new(~soundseed_w,bounds:Rect(20, 20, 300, 300),columns:~gridside,rows:~gridside);
 ~caplay = Button(~soundseed_w,Rect(350,20,30,30));
@@ -33,9 +40,14 @@ SynthDef(\singlegrain, {
 ~carandConfigSizedNbox = NumberBox(~soundseed_w,Rect(490,70,30,30));
 ~grainfreqserie = Button(~soundseed_w,Rect(350,120,180,30));
 ~seriebasefreq = NumberBox(~soundseed_w,Rect(550,120,40,30));
-~cageneration = Button(~soundseed_w,Rect(350,170,40,30));
+~golButton = Button(~soundseed_w,Rect(350,170,40,30));
+~wolfButton = Button(~soundseed_w,Rect(350,220,40,30));
+~wolfRuleNumber = NumberBox(~soundseed_w,Rect(400,220,40,30));
+~cleargridButton = Button(~soundseed_w,Rect(350,270,50,30));
+~drawmodeButton = Button(~soundseed_w,Rect(420,270,50,30));
 
-// behaviour definition
+////////////////////////
+// define GUI objects behaviour
 ~caplay
 .states_([
 	[">",Color.black,Color.gray],
@@ -51,12 +63,14 @@ SynthDef(\singlegrain, {
 	["Single",Color.black,Color.gray],
 	["Continuous",Color.black,Color.green]])
 .action_({|me|
-	~ss_carestart = me.value
+	~ss_carestart = me.value;
+	if (me.value==1) { ~continue = 1 }
 });
 
 ~carandConfig
 .states_([["Random",Color.black,Color.gray]])
 .action_({|me|
+	if (~currca=="wolf") { ~wolfCurrRow = 1 };
 	if (~carandConfigSized.value==0) {
 		~randConfig.value(~gridside)
 	} {
@@ -84,10 +98,23 @@ SynthDef(\singlegrain, {
 });
 ~seriebasefreq.value_(~bsfreq)
 .action_({|me| ~bsfreq = me.value });
-~cageneration
+~golButton
 .states_([["GoL",Color.black,Color.gray]])
-.action_({ ~gameOfLife.value(~cagrid) });
-
+.action_({ ~gameOfLife.value(~cagrid,~gridside,~gridside); ~currca = "gol" });
+~wolfButton
+.states_([["Wolf",Color.black,Color.gray]])
+.action_({|me| ~currca = "wolf"; ~wolfCurrRow = 1 });
+~wolfRuleNumber.value_(~wolframRule)
+.action_({|me| ~wolframRule = me.value.asInt });
+~cleargridButton
+.states_([["clear",Color.black,Color.gray]])
+.action_({|me| ~cagrid.clearGrid });
+~drawmodeButton
+.states_([["delete",Color.black,Color.cyan],["trail",Color.black,Color.magenta]])
+.action_({|me|
+	if (me.value==0) { ~cagrid.setTrailDrag_(false) };
+	if (me.value==1) { ~cagrid.setTrailDrag_(true) };
+});
 ////////// GUI END ///////////
 
 // read column from the CA BoxGrid
@@ -170,25 +197,27 @@ SynthDef(\singlegrain, {
 	freq = base * ( n.pow(alpha) * beta.pow(n) + gamma );
 };
 //
-
-~tas = Task{ loop{
-	~sequencer.value(~gridside,~timestep,~rnd);
-//	"CA Generation".postln;
-//	~randConfig.value(16);
-	~ss_gridcontent = ~gameOfLife.value(~cagrid,~gridside,~gridside);
-	~checkgridstatus.value();
-	}
-};
 ~checkgridstatus = {
-	var current, last,status;
+	var current, last,status,continue;
 	current = ~ss_gridcontent;
+	continue = { ~carandConfigSized.value }.defer;
 	if (~ss_gridcontentlast==nil){
 		~ss_gridcontentlast = ~ss_gridcontent
 	} {
 		if (~ss_gridcontentlast==~ss_gridcontent){
-			if (~ss_carestart==1) {
-			// random generation
-			~randConfig.value(~gridside);
+			if (~currloop==~maxloops) {
+				~currloop = 0;
+				if (~ss_carestart==1) {
+					// random generation
+					//			~randConfig.value(~gridside);
+					if (~continue==0) {
+						~randConfig.value(~gridside)
+					} {
+						{ ~randConfigSized.value(~gridside,~carandConfigSizedNbox.value) }.defer
+					}
+				}
+			} {
+				~currloop = ~currloop + 1
 			}
 		}
 	};
@@ -252,17 +281,91 @@ SynthDef(\singlegrain, {
 //	grid.postln;
 	newgrid
 };
+~wolfram = {|rule,boxgrid,rows=16,cols=16|
+	var thisgrid, newgrid, pattern, binrule;
+	thisgrid = boxgrid.getNodeStates;
+	newgrid = Array.fill((rows+2)*(cols+2),0).clump(cols+2);
+	//newgrid = thisgrid;
+	if (rule>255) { rule = 30; { ~wolfRuleNumber.value = 30 }.defer };
+	binrule = rule.asBinaryDigits.reverse;
+	// ("Using rule: "++rule++" - "++binrule).postln;
+	//
+	for(rows,1,{|row|
+		for(1,cols,{|col|
+			var pos;
+			pattern = Array.fill(3,0);
+			pattern[0] = thisgrid[row][col-1];
+			pattern[1] = thisgrid[row][col];
+			pattern[2] = thisgrid[row][col+1];
+			// get the pattern correspondent value from rule
+			pos = pattern.convertDigits(2);
+			if (binrule[pos]==1){
+/* ("row "++row++" col "++col++" pattern: "++pattern++" rule: "++binrule[pos]).postln; */
+				newgrid[row][col] = thisgrid[row][col];
+				newgrid[row+1][col] = 1;
+			};
+			if (binrule[pos]==0){
+				newgrid[row][col] = pattern[1];
+			}
+		})
+	});
+	boxgrid.setNodeStates_(newgrid);
+	newgrid
+};
+~caSelect = {|ca|
+	case
+	{ ca == "gol" } { ~ss_gridcontent = ~gameOfLife.value(~cagrid,~gridside,~gridside); }
+	//{ ca == "wolf" } { ~ss_gridcontent = ~wolfram.value(~wolframRule,~cagrid,16,16) };
+	{ ca == "wolf" } { ~ss_gridcontent = ~wolframOdd.value(~wolfCurrRow,~wolframRule,~cagrid,16,16) };
+
+	~checkgridstatus.value();
+};
+~wolframOdd = {|row,rule,boxgrid,rows=16,cols=16|
+	var thisgrid, newgrid, pattern, binrule, rowlimit;
+	rowlimit = rows - 1;
+	thisgrid = boxgrid.getNodeStates;
+	//newgrid = Array.fill((rows+2)*(cols+2),0).clump(cols+2);
+	//newgrid = thisgrid;
+	if (rule>255) { rule = 30; { ~wolfRuleNumber.value = 30 }.defer };
+	binrule = rule.asBinaryDigits.reverse;
+	// ("Using rule: "++rule++" - "++binrule).postln;
+	//
+	// for(rows,1,{|row|
+	for(1,cols,{|col|
+		var pos;
+		pattern = Array.fill(3,0);
+		pattern[0] = thisgrid[row][col-1];
+		pattern[1] = thisgrid[row][col];
+		pattern[2] = thisgrid[row][col+1];
+		// get the pattern correspondent value from rule
+		pos = pattern.convertDigits(2);
+		if (binrule[pos]==1){
+/* ("row "++row++" col "++col++" pattern: "++pattern++" rule: "++binrule[pos]).postln; */
+			//newgrid[row][col] = thisgrid[row][col];
+			thisgrid[row+1][col] = 1;
+		};
+		/*
+		if (binrule[pos]==0){
+			newgrid[row][col] = pattern[1];
+		}
+		*/
+	});
+	boxgrid.setNodeStates_(thisgrid);
+	if (row<rowlimit) { ~wolfCurrRow = ~wolfCurrRow + 1 };
+	if (row==rowlimit) { ~wolfCurrRow = 1 };
+	thisgrid
+};
+// the play button task
+~tas = Task{ loop{
+	~sequencer.value(~gridside,~timestep,~rnd);
+//	"CA Generation".postln;
+//	~randConfig.value(16);
+//	~ss_gridcontent = ~gameOfLife.value(~cagrid,~gridside,~gridside);
+//	~ss_gridcontent = ~wolfram.value(~wolframRule,~cagrid,16,16);
+//	~checkgridstatus.value();
+	~caSelect.value(~currca);
+	}
+};
 )
-///////////////
-// MANUAL EXECUTION - also controlled by GUI
-///////////////
-~tas.play;
-~tas.stop;
+//The amphichiral elementary cellular automata are 0, 1, 4, 5, 18, 19, 22, 23, 32, 33, 36, 37, 50, 51, 54, 55, 72, 73, 76, 77, 90, 91, 94, 95, 104, 105, 108, 109, 122, 123, 126, 127, 128, 129, 132, 133, 146, 147, 150, 151, 160, 161, 164, 165, 178, 179, 182, 183, 200, 201, 204, 205, 218, 219, 222, 223, 232, 233, 236, 237, 250, 251, 254, and 255.
 
-~timestep = 0.0219;
-~rnd = 0.01;
-~timestep = 0.2;
-~ss_mindur = 40;
-~ss_deltadur = 80;
-
-~gameOfLife.value(~cagrid);
