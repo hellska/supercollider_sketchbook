@@ -1,32 +1,55 @@
 // Generatore di Grani
 (
-~ss_mindur = 50; // minimum duation of a single grain
+~ss_mindur = 40; // minimum duation of a single grain
 ~ss_deltadur = 200; // add to ~ss_mindur to calculate mad grain duration
 ~bsfreq = 40.midicps; // fundamental freq of the serie 82~ Hz
 ~timestep = 0.03; // sequencer's single step length
 ~rnd = 0.03; // randomic component of tempo (addeed to step length)
 ~freqserie = 0; // Define the default series type (0=armonic serie)
 ~ss_carestart = 0; // set if CA restart when reach a quiet state(no oscillatory states)
-~gridside = 18;
+~gridside = 18; // set the grid side with border for Life to work in a correct way
 ~wolframRule = 30; // why 30?! http://mathworld.wolfram.com/Rule30.html
-~wolfCurrRow = 1;
-~wolfMaxRows = 16;
-~currca = "gol";
-~continue = 0;
-~currloop = 0;
-~maxloops = 16;
+~wolfCurrRow = 1; // counter for Wolfram CA progression (one row each pattern read)
+~wolfMaxRows = 16; // max number of Wolfram CA rows
+~currca = "gol"; // define the current ca executed
+~continue = 0; // one cycle then stationary / random config after one cycle + ~maxloops patterns loop
+~currloop = 0; // cycle to count pattern loop
+~maxloops = 16; //
+~synthez = "sinegrain"; //
 // Improvements
 // Implement an instrument that create complex spectrum with n.do({ SinOsc ecc... })
 
-SynthDef(\singlegrain, {
+SynthDef("sinegrain", {
 	|outbus = 0,
 	freq = 440,
 	length = 50, // ms range(50,250)
-	amp = 0.8|
+	amp = 1|
 	var dur, env, grain;
 	dur = 1 / 1000 * length;
-	env = EnvGen.kr(Env([0, 1, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
-	grain = SinOsc.ar([freq,freq],mul:amp) * env;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	grain = SinOsc.ar([freq,freq]) * env;
+	Out.ar(outbus, grain)
+}).send(s);
+SynthDef("sawgrain", {
+	|outbus = 0,
+	freq = 440,
+	length = 50, // ms range(50,250)
+	amp = 1|
+	var dur, env, grain;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	grain = Saw.ar([freq,freq]) * env;
+	Out.ar(outbus, grain)
+}).send(s);
+SynthDef("pulsegrain", {
+	|outbus = 0,
+	freq = 440,
+	length = 50, // ms range(50,250)
+	amp = 1|
+	var dur, env, grain;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	grain = Pulse.ar([freq,freq]) * env;
 	Out.ar(outbus, grain)
 }).send(s);
 ////////////////////////
@@ -35,6 +58,7 @@ SynthDef(\singlegrain, {
 ~cagrid = BoxGrid.new(~soundseed_w,bounds:Rect(20, 20, 300, 300),columns:~gridside,rows:~gridside);
 ~caplay = Button(~soundseed_w,Rect(350,20,30,30));
 ~carestart = Button(~soundseed_w,Rect(400,20,90,30));
+~graintype = Button(~soundseed_w,Rect(510,20,60,30));
 ~carandConfig = Button(~soundseed_w,Rect(350,70,60,30));
 ~carandConfigSized = Button(~soundseed_w,Rect(420,70,60,30));
 ~carandConfigSizedNbox = NumberBox(~soundseed_w,Rect(490,70,30,30));
@@ -66,7 +90,17 @@ SynthDef(\singlegrain, {
 	~ss_carestart = me.value;
 	if (me.value==1) { ~continue = 1 }
 });
-
+~graintype
+.states_([
+	["Sine",Color.black,Color.white],
+	["Saw",Color.black,Color.yellow],
+	["Square",Color.black,Color.red]])
+.action_({|me|
+	case
+	{me.value==0} {~synthez="sinegrain"}
+	{me.value==1} {~synthez="sawgrain"}
+	{me.value==2} {~synthez="pulsegrain"};
+});
 ~carandConfig
 .states_([["Random",Color.black,Color.gray]])
 .action_({|me|
@@ -119,7 +153,7 @@ SynthDef(\singlegrain, {
 
 // read column from the CA BoxGrid
 ~readcol = {|col|
-	var my2d,bfreq,freq,lenght,amp,dur,harmonics;
+	var my2d,bfreq,freq,lenght,amp,dur,harmonics,synthez;
 	bfreq = ~bsfreq ; // 80;
 	harmonics = ~gridside-2;
 	freq = List[];
@@ -156,11 +190,18 @@ SynthDef(\singlegrain, {
 	};
 	// amp = 0.5 / freq.size;
 	freq.size.do{|idx|
-	//	"inizializzo synth".postln;
-		Synth(\singlegrain, [\freq, freq[idx], \length, lenght[idx],\amp,amp[idx]/freq.size])
+	//	OO Notation
+	//	Synth(\singlegrain, [\freq, freq[idx], \length, lenght[idx],\amp,amp[idx]/freq.size])
+	// OSC message notation - should be more efficient
+		var grain,amplitude;
+		grain = ("grain_"++idx);
+		amplitude = amp[idx] / (idx + 1) / 16;
+		s.sendBundle(0.1,
+			["/s_new",~synthez,grain = s.nextNodeID, 0, 1],
+			["/n_set",grain,\freq,freq[idx],\length,lenght[idx],\amp,amplitude]
+		);
 	};
 };
-
 
 // sequencer - read each column every timestep - skip borders cause not used in Conway gameOfLife
 ~sequencer = {|cols|
@@ -196,7 +237,7 @@ SynthDef(\singlegrain, {
 	var freq;
 	freq = base * ( n.pow(alpha) * beta.pow(n) + gamma );
 };
-//
+// determines stale states and the duration of the stale state
 ~checkgridstatus = {
 	var current, last,status,continue;
 	current = ~ss_gridcontent;
@@ -240,7 +281,6 @@ SynthDef(\singlegrain, {
 			// calc array2D indexs to avoid borders
 			xc = col+1;
 			yc = row+1;
-			//("Row: "++yc++" Col: "++xc++" Value: "++boxGrid.getState(xc,yc)).postln;
 			cell = grid[yc,xc];
 			// count live cells
 			if (cell==1){ liceCellCount = liceCellCount+1 };
@@ -277,19 +317,24 @@ SynthDef(\singlegrain, {
 		}
 	};
 	boxGrid.setNodeStates_(newgrid);
-//	liceCellCount.postln;
-//	grid.postln;
 	newgrid
 };
+// select the actice CA to use and calls the ca function
+~caSelect = {|ca|
+	case
+	{ ca == "gol" } { ~ss_gridcontent = ~gameOfLife.value(~cagrid,~gridside,~gridside); }
+	//{ ca == "wolf" } { ~ss_gridcontent = ~wolfram.value(~wolframRule,~cagrid,16,16) };
+	{ ca == "wolf" } { ~ss_gridcontent = ~wolframOdd.value(~wolfCurrRow,~wolframRule,~cagrid,16,16) };
+
+	~checkgridstatus.value();
+};
+// implementation of Wolfram CA (OLD not working with odd rules)
 ~wolfram = {|rule,boxgrid,rows=16,cols=16|
 	var thisgrid, newgrid, pattern, binrule;
 	thisgrid = boxgrid.getNodeStates;
 	newgrid = Array.fill((rows+2)*(cols+2),0).clump(cols+2);
-	//newgrid = thisgrid;
 	if (rule>255) { rule = 30; { ~wolfRuleNumber.value = 30 }.defer };
 	binrule = rule.asBinaryDigits.reverse;
-	// ("Using rule: "++rule++" - "++binrule).postln;
-	//
 	for(rows,1,{|row|
 		for(1,cols,{|col|
 			var pos;
@@ -300,7 +345,6 @@ SynthDef(\singlegrain, {
 			// get the pattern correspondent value from rule
 			pos = pattern.convertDigits(2);
 			if (binrule[pos]==1){
-/* ("row "++row++" col "++col++" pattern: "++pattern++" rule: "++binrule[pos]).postln; */
 				newgrid[row][col] = thisgrid[row][col];
 				newgrid[row+1][col] = 1;
 			};
@@ -312,25 +356,13 @@ SynthDef(\singlegrain, {
 	boxgrid.setNodeStates_(newgrid);
 	newgrid
 };
-~caSelect = {|ca|
-	case
-	{ ca == "gol" } { ~ss_gridcontent = ~gameOfLife.value(~cagrid,~gridside,~gridside); }
-	//{ ca == "wolf" } { ~ss_gridcontent = ~wolfram.value(~wolframRule,~cagrid,16,16) };
-	{ ca == "wolf" } { ~ss_gridcontent = ~wolframOdd.value(~wolfCurrRow,~wolframRule,~cagrid,16,16) };
-
-	~checkgridstatus.value();
-};
+// implementation of Wolfram CA
 ~wolframOdd = {|row,rule,boxgrid,rows=16,cols=16|
 	var thisgrid, newgrid, pattern, binrule, rowlimit;
 	rowlimit = rows - 1;
 	thisgrid = boxgrid.getNodeStates;
-	//newgrid = Array.fill((rows+2)*(cols+2),0).clump(cols+2);
-	//newgrid = thisgrid;
 	if (rule>255) { rule = 30; { ~wolfRuleNumber.value = 30 }.defer };
 	binrule = rule.asBinaryDigits.reverse;
-	// ("Using rule: "++rule++" - "++binrule).postln;
-	//
-	// for(rows,1,{|row|
 	for(1,cols,{|col|
 		var pos;
 		pattern = Array.fill(3,0);
@@ -340,15 +372,8 @@ SynthDef(\singlegrain, {
 		// get the pattern correspondent value from rule
 		pos = pattern.convertDigits(2);
 		if (binrule[pos]==1){
-/* ("row "++row++" col "++col++" pattern: "++pattern++" rule: "++binrule[pos]).postln; */
-			//newgrid[row][col] = thisgrid[row][col];
 			thisgrid[row+1][col] = 1;
 		};
-		/*
-		if (binrule[pos]==0){
-			newgrid[row][col] = pattern[1];
-		}
-		*/
 	});
 	boxgrid.setNodeStates_(thisgrid);
 	if (row<rowlimit) { ~wolfCurrRow = ~wolfCurrRow + 1 };
@@ -358,14 +383,19 @@ SynthDef(\singlegrain, {
 // the play button task
 ~tas = Task{ loop{
 	~sequencer.value(~gridside,~timestep,~rnd);
-//	"CA Generation".postln;
-//	~randConfig.value(16);
-//	~ss_gridcontent = ~gameOfLife.value(~cagrid,~gridside,~gridside);
-//	~ss_gridcontent = ~wolfram.value(~wolframRule,~cagrid,16,16);
-//	~checkgridstatus.value();
-	~caSelect.value(~currca);
+	~caSelect.value(~currca); // does the trick
 	}
 };
 )
 //The amphichiral elementary cellular automata are 0, 1, 4, 5, 18, 19, 22, 23, 32, 33, 36, 37, 50, 51, 54, 55, 72, 73, 76, 77, 90, 91, 94, 95, 104, 105, 108, 109, 122, 123, 126, 127, 128, 129, 132, 133, 146, 147, 150, 151, 160, 161, 164, 165, 178, 179, 182, 183, 200, 201, 204, 205, 218, 219, 222, 223, 232, 233, 236, 237, 250, 251, 254, and 255.
 
+// Parameters not controlled yet in GUI
+~ss_mindur = 40;
+~ss_deltadur = 200;
+~rnd = 0.03;
+~timestep = 0.3;
+
+~maxloops = 16;
+~synthez = "sinegrain";
+~synthez = "sawgrain";
+~synthez = "pulsegrain";
