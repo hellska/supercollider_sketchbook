@@ -3,12 +3,10 @@
 //////////////////////////////////////////
 s.meter
 // Change Synth and MIDI Func
-
 ~simple.value;
 ~rumble.value;
 ~randomDelay.value;
 ~ranDelaySwipe.value;
-// N E W !!!
 ~particleSin.value;
 ~greenGlitch.value;
 ~rumbledrone.value;

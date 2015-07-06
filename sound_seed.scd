@@ -1,7 +1,7 @@
 // Generatore di Grani
 (
-~ss_mindur = 40; // minimum duation of a single grain
-~ss_deltadur = 200; // add to ~ss_mindur to calculate mad grain duration
+~grain_dur = 40; // duration of single grain
+~overlap = 20; // overlap of grains, due to calculation function should be less than ~grain_dur
 ~bsfreq = 40.midicps; // fundamental freq of the serie 82~ Hz
 ~timestep = 0.03; // sequencer's single step length
 ~rnd = 0.03; // randomic component of tempo (addeed to step length)
@@ -56,6 +56,7 @@ SynthDef("pulsegrain", {
 // draw GUI objects
 ~soundseed_w = Window.new("Sound Seed", Rect(10, 500, 600, 350)).front;
 ~cagrid = BoxGrid.new(~soundseed_w,bounds:Rect(20, 20, 300, 300),columns:~gridside,rows:~gridside);
+~stepgrid = BoxGrid.new(~soundseed_w,Rect(37,322,266,16),16,1);
 ~caplay = Button(~soundseed_w,Rect(350,20,30,30));
 ~carestart = Button(~soundseed_w,Rect(400,20,90,30));
 ~graintype = Button(~soundseed_w,Rect(510,20,60,30));
@@ -72,6 +73,9 @@ SynthDef("pulsegrain", {
 
 ////////////////////////
 // define GUI objects behaviour
+~stepgrid
+.setFillColor_(Color.red)
+.setBackgrColor_(Color.white);
 ~caplay
 .states_([
 	[">",Color.black,Color.gray],
@@ -160,7 +164,8 @@ SynthDef("pulsegrain", {
 	lenght = List[];
 	amp = List[];
 	my2d = Array2D.fromArray(~gridside,~gridside,~cagrid.getNodeStates.flat);
-	dur = rand(~ss_deltadur) + ~ss_mindur;
+	// dur = rand(~ss_deltadur) + ~ss_mindur;
+	dur = ~grain_dur;
 	my2d.colAt(col).do{
 		|me,idx|
 		if (idx>0) {
@@ -210,9 +215,24 @@ SynthDef("pulsegrain", {
 	columns.do{|i|
 		if (~rnd==nil){~rnd=0};
 		step = ~timestep + rand(~rnd);
+		// show the current step
+		~stepgrid.gridNodes[0][i].setState_(true);
+		if (i>0) { ~stepgrid.gridNodes[0][i-1].setState_(false) };
+		if (i==0) { ~stepgrid.gridNodes[0][columns-1].setState_(false) };
+		~stepgrid.refresh;
 		~readcol.value(i+1);
 		step.wait;
 	}
+};
+// calculate the timestep using grain and ovarlap values
+~timestep_calc = {|grain_dur, overlap|
+	var step;
+	step = (grain_dur / 1000) - (overlap / 1000);
+	if (step <= 0){
+		step = grain_dur / 1000;
+		"Overlap set to 0 due to a value higer than graindur".postln
+	};
+	step
 };
 // generation of random configuration
 ~randConfig = {|side|
@@ -380,6 +400,9 @@ SynthDef("pulsegrain", {
 	if (row==rowlimit) { ~wolfCurrRow = 1 };
 	thisgrid
 };
+// calculate the timetep according to ~grain_dur ~overlap
+~timestep = ~timestep_calc.value(~grain_dur,~overlap);
+~rnd = ~overlap / 1000 / 4;
 // the play button task
 ~tas = Task{ loop{
 	~sequencer.value(~gridside,~timestep,~rnd);
@@ -390,12 +413,14 @@ SynthDef("pulsegrain", {
 //The amphichiral elementary cellular automata are 0, 1, 4, 5, 18, 19, 22, 23, 32, 33, 36, 37, 50, 51, 54, 55, 72, 73, 76, 77, 90, 91, 94, 95, 104, 105, 108, 109, 122, 123, 126, 127, 128, 129, 132, 133, 146, 147, 150, 151, 160, 161, 164, 165, 178, 179, 182, 183, 200, 201, 204, 205, 218, 219, 222, 223, 232, 233, 236, 237, 250, 251, 254, and 255.
 
 // Parameters not controlled yet in GUI
-~ss_mindur = 40;
-~ss_deltadur = 200;
+~grain_dur
 ~rnd = 0.03;
+~maxloops = 16;
 ~timestep = 0.3;
 
-~maxloops = 16;
-~synthez = "sinegrain";
-~synthez = "sawgrain";
-~synthez = "pulsegrain";
+(
+~grain_dur = 90000;
+~overlap = 2000;
+~timestep = ~timestep_calc.value(~grain_dur,~overlap);
+~rnd = ~overlap / 1000 / 4;
+)

@@ -22,6 +22,9 @@ s.meter;
 // Set the main window
 ~loboMain = Window("Lobotomix Controls").setTopLeftBounds(Rect(600,0,840,900)).front ;
 ~mainVol = s.volume.gui(~loboMain);
+
+
+
 ~synth_list = TextField(~loboMain, Rect(80,10,50,22)).focus(true) ;
 //v.align_(\center);
 ~synth_active = TextField(~loboMain, Rect(135,10,220,22))
@@ -29,6 +32,7 @@ s.meter;
 // keyboard input
 ~synth_list.keyDownAction_{|i, char|
 	char.switch(
+		// the functions are in the file: midi_control_functions.scd
 		$1, { ~simple.value; ~synth_active.string = "MIDI Func: ~simple"  },
 		$2, { ~rumble.value; ~synth_active.string = "MIDI Func: ~rumble" },
 		$3, { ~randomDelay.value; ~synth_active.string = "MIDI Func: ~randomDelay" },
@@ -460,7 +464,6 @@ s.meter;
 	~score_text = TextView(~score_main,Rect(10,20,130,200))
 	.string_(title+" edit");
 /*
-
 	~grainAr[~synthIndex].get(\ratio, {|a| { ~nboxes[0].valueAction_(a)}.defer});
 	~grainAr[~synthIndex].get(\dur, {|a| {~nboxes[1].valueAction_(a)}.defer});
 	~grainAr[~synthIndex].get(\rate, {|a| {~nboxes[2].valueAction_(a)}.defer});
