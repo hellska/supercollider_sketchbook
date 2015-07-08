@@ -1,6 +1,6 @@
 // Generatore di Grani
 (
-~grain_dur = 40; // duration of single grain
+~grain_dur = 140; // duration of single grain
 ~overlap = 20; // overlap of grains, due to calculation function should be less than ~grain_dur
 ~bsfreq = 40.midicps; // fundamental freq of the serie 82~ Hz
 ~timestep = 0.03; // sequencer's single step length
@@ -15,42 +15,399 @@
 ~continue = 0; // one cycle then stationary / random config after one cycle + ~maxloops patterns loop
 ~currloop = 0; // cycle to count pattern loop
 ~maxloops = 16; //
-~synthez = "sinegrain"; //
-// Improvements
-// Implement an instrument that create complex spectrum with n.do({ SinOsc ecc... })
-
-SynthDef("sinegrain", {
-	|outbus = 0,
-	freq = 440,
-	length = 50, // ms range(50,250)
-	amp = 1|
-	var dur, env, grain;
+~synthez = "sinegrain"; // basename for the synth
+// Synth Definition
+SynthDef("sinegrain1", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = 40,
+	amps = 1,
+	pan = 0|
+	var source, out, env, dur;
 	dur = 1 / 1000 * length;
 	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
-	grain = SinOsc.ar([freq,freq]) * env;
-	Out.ar(outbus, grain)
+	source = SinOsc.ar(freqs,mul:amps) * env;
+	out = Pan2.ar(source,pan);
+	Out.ar(outBus, out)
 }).send(s);
-SynthDef("sawgrain", {
-	|outbus = 0,
-	freq = 440,
-	length = 50, // ms range(50,250)
-	amp = 1|
-	var dur, env, grain;
+SynthDef("sinegrain2", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80],
+	amps = #[1,0.5],
+	pan = 0|
+	var source, rescale, out, env, dur;
 	dur = 1 / 1000 * length;
 	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
-	grain = Saw.ar([freq,freq]) * env;
-	Out.ar(outbus, grain)
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1])) * env;
+	rescale = source * (amp / 2); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
 }).send(s);
-SynthDef("pulsegrain", {
-	|outbus = 0,
-	freq = 440,
-	length = 50, // ms range(50,250)
-	amp = 1|
-	var dur, env, grain;
+// 3 bank oscillator
+SynthDef("sinegrain3", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,160],
+	amps = #[1,0.5,0.333],
+	pan = 0|
+	var source, rescale, out, env, dur;
 	dur = 1 / 1000 * length;
 	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
-	grain = Pulse.ar([freq,freq]) * env;
-	Out.ar(outbus, grain)
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) ) * env;
+	rescale = source * (amp / 3); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+// 4 bank oscillator
+SynthDef("sinegrain4", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,160,320],
+	amps = #[1,0.5,0.333,0.25],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) ) * env;
+	rescale = source * (amp / 4); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain5", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,160,320,640],
+	amps = #[1,0.5,0.333,0.25,0.2],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) ) * env;
+	rescale = source * (amp / 5); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain6", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,160,320,640,1280],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) ) * env;
+	rescale = source * (amp / 6); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain7", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,160,320,640,1280,2560],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) ) * env;
+	rescale = source * (amp / 7); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain8", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,160,320,640,1280,2560,5120],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) ) * env;
+	rescale = source * (amp / 8); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain9", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,160,320,640,1280,2560,5120,10240],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125,0.111],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) +
+		SinOsc.ar(freqs[8],mul:amps[8]) ) * env;
+	rescale = source * (amp / 9); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain10", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,160,320,640,1280,2560,5120,10240,20480],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125,0.111,0.1],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) +
+		SinOsc.ar(freqs[8],mul:amps[8]) +
+		SinOsc.ar(freqs[9],mul:amps[9]) ) * env;
+	rescale = source * (amp / 10); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain11", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,120,160,200,240,280,320,360,400,440],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125,0.111,0.1,0.09],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) +
+		SinOsc.ar(freqs[8],mul:amps[8]) +
+		SinOsc.ar(freqs[9],mul:amps[9]) +
+		SinOsc.ar(freqs[10],mul:amps[10]) ) * env;
+	rescale = source * (amp / 11); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain12", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,120,160,200,240,280,320,360,400,440,480],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125,0.111,0.1,0.09,0.083],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) +
+		SinOsc.ar(freqs[8],mul:amps[8]) +
+		SinOsc.ar(freqs[9],mul:amps[9]) +
+		SinOsc.ar(freqs[10],mul:amps[10]) +
+		SinOsc.ar(freqs[11],mul:amps[11]) ) * env;
+	rescale = source * (amp / 12); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain13", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,120,160,200,240,280,320,360,400,440,480,520],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125,0.111,0.1,0.09,0.083,0.076],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) +
+		SinOsc.ar(freqs[8],mul:amps[8]) +
+		SinOsc.ar(freqs[9],mul:amps[9]) +
+		SinOsc.ar(freqs[10],mul:amps[10]) +
+		SinOsc.ar(freqs[11],mul:amps[11]) +
+		SinOsc.ar(freqs[12],mul:amps[12]) ) * env;
+	rescale = source * (amp / 13); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain14", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,120,160,200,240,280,320,360,400,440,480,520,560],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125,0.111,0.1,0.09,0.083,0.076,0.071],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) +
+		SinOsc.ar(freqs[8],mul:amps[8]) +
+		SinOsc.ar(freqs[9],mul:amps[9]) +
+		SinOsc.ar(freqs[10],mul:amps[10]) +
+		SinOsc.ar(freqs[11],mul:amps[11]) +
+		SinOsc.ar(freqs[12],mul:amps[12]) +
+		SinOsc.ar(freqs[13],mul:amps[13]) ) * env;
+	rescale = source * (amp / 14); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain15", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,120,160,200,240,280,320,360,400,440,480,520,560,600],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125,0.111,0.1,0.09,0.083,0.076,0.071,0.066],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) +
+		SinOsc.ar(freqs[8],mul:amps[8]) +
+		SinOsc.ar(freqs[9],mul:amps[9]) +
+		SinOsc.ar(freqs[10],mul:amps[10]) +
+		SinOsc.ar(freqs[11],mul:amps[11]) +
+		SinOsc.ar(freqs[12],mul:amps[12]) +
+		SinOsc.ar(freqs[13],mul:amps[13]) +
+		SinOsc.ar(freqs[14],mul:amps[14]) ) * env;
+	rescale = source * (amp / 15); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
+}).send(s);
+SynthDef("sinegrain16", {
+	|outBus = 0,
+	amp = 1,
+	gate = 1,
+	length = 50,
+	freqs = #[40,80,120,160,200,240,280,320,360,400,440,480,520,560,600,640],
+	amps = #[1,0.5,0.333,0.25,0.2,0.166,0.142,0.125,0.111,0.1,0.09,0.083,0.076,0.071,0.066,0.062],
+	pan = 0|
+	var source, rescale, out, env, dur;
+	dur = 1 / 1000 * length;
+	env = EnvGen.kr(Env([0, amp, 0], [dur/2, dur/2], \sine),doneAction:2); //Gaussian-shaped
+	source = (
+		SinOsc.ar(freqs[0],mul:amps[0]) +
+		SinOsc.ar(freqs[1],mul:amps[1]) +
+		SinOsc.ar(freqs[2],mul:amps[2]) +
+		SinOsc.ar(freqs[3],mul:amps[3]) +
+		SinOsc.ar(freqs[4],mul:amps[4]) +
+		SinOsc.ar(freqs[5],mul:amps[5]) +
+		SinOsc.ar(freqs[6],mul:amps[6]) +
+		SinOsc.ar(freqs[7],mul:amps[7]) +
+		SinOsc.ar(freqs[8],mul:amps[8]) +
+		SinOsc.ar(freqs[9],mul:amps[9]) +
+		SinOsc.ar(freqs[10],mul:amps[10]) +
+		SinOsc.ar(freqs[11],mul:amps[11]) +
+		SinOsc.ar(freqs[12],mul:amps[12]) +
+		SinOsc.ar(freqs[13],mul:amps[13]) +
+		SinOsc.ar(freqs[14],mul:amps[14]) +
+		SinOsc.ar(freqs[15],mul:amps[15]) ) * env;
+	rescale = source * (amp / 16); // rescale the amplitude by the number of oscillators
+	out = Pan2.ar(rescale,pan);
+	Out.ar(outBus, out)
 }).send(s);
 ////////////////////////
 // draw GUI objects
@@ -157,11 +514,11 @@ SynthDef("pulsegrain", {
 
 // read column from the CA BoxGrid
 ~readcol = {|col|
-	var my2d,bfreq,freq,lenght,amp,dur,harmonics,synthez;
+	var my2d,bfreq,freq,length,amp,dur,harmonics,synthez,synthid;
 	bfreq = ~bsfreq ; // 80;
 	harmonics = ~gridside-2;
 	freq = List[];
-	lenght = List[];
+	length = List[];
 	amp = List[];
 	my2d = Array2D.fromArray(~gridside,~gridside,~cagrid.getNodeStates.flat);
 	// dur = rand(~ss_deltadur) + ~ss_mindur;
@@ -185,27 +542,22 @@ SynthDef("pulsegrain", {
 					};
 					// freq.add(idx + 1 * bfreq/2);
 					// different length for each sine of the column
-					// lenght.add(rand(200) + 50);
+					// length.add(rand(200) + 50);
 					// same length for each grain of the column
-					lenght.add(dur);
-					amp.add(1/(idx));
+					length.add(dur);
+					amp.add(1/(idx)); // rescale is done inside the synth
 				}
 			}
 		}
 	};
-	// amp = 0.5 / freq.size;
-	freq.size.do{|idx|
-	//	OO Notation
-	//	Synth(\singlegrain, [\freq, freq[idx], \length, lenght[idx],\amp,amp[idx]/freq.size])
-	// OSC message notation - should be more efficient
-		var grain,amplitude;
-		grain = ("grain_"++idx);
-		amplitude = amp[idx] / (idx + 1) / 16;
-		s.sendBundle(0.1,
-			["/s_new",~synthez,grain = s.nextNodeID, 0, 1],
-			["/n_set",grain,\freq,freq[idx],\length,lenght[idx],\amp,amplitude]
-		);
+	if (freq.size>0) {
+		var freqs;
+		freqs = Array.fill(freq.size, {|idx| freq[idx] });
+		synthez = (~synthez++freq.size);
+		synthez.postln;
+		Synth(synthez,[\freqs, freqs, \length, dur]);
 	};
+
 };
 
 // sequencer - read each column every timestep - skip borders cause not used in Conway gameOfLife
@@ -419,8 +771,8 @@ SynthDef("pulsegrain", {
 ~timestep = 0.3;
 
 (
-~grain_dur = 90000;
-~overlap = 2000;
+~grain_dur = 150;
+~overlap = 145;
 ~timestep = ~timestep_calc.value(~grain_dur,~overlap);
 ~rnd = ~overlap / 1000 / 4;
 )
