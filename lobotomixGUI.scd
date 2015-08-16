@@ -74,7 +74,7 @@ s.meter;
 ~lobo_CurrentSoundFileList = ~bufDrumkit;
 //// List the available sound file lists
 ~lobo_Popup = PopUpMenu(~loboMain, Rect(280, 38, 150, 22))
-.items_(["Drum kit", "Tic Gaber", "900 voices"])
+.items_(["Drum kit", "Tic Gaber", "900 voices", "Tzunami"])
 .action_({|me| me.value.postln;
 	switch (me.value,
 		0, { ~setListViewContent.value(~bufDrumkit);
@@ -85,6 +85,9 @@ s.meter;
 		},
 		2, { ~setListViewContent.value(~mwvoices900);
 			~lobo_CurrentSoundFileList = ~mwvoices900;
+		},
+		3, {  ~setListViewContent.value(~tzunami);
+			~lobo_CurrentSoundFileList = ~tzunami;
 		}
 	);
 });
@@ -346,18 +349,20 @@ s.meter;
 //////////// x3dLooper GUI
 ~x3d_guiCreator = {|title, parent|
 
+	~x3d_rec_string = "N O T  R E C O R D I N G";
+
 	~x3dView = CompositeView(parent, Rect(80,480,600,200)).background_(Color.new255);
-	~x3d_Label = StaticText(~x3dView, Rect(0,0,150,22))
+	~x3d_Label = StaticText(~x3dView, Rect(10,0,150,22))
 	.string_(title)
 	.stringColor_(Color.red);
 	~x3d_fileView = SoundFileView(~x3dView, Rect(10,22,350,178))
 	.timeCursorOn_(true)
 	.timeCursorColor_(Color.red);
 
-	~x3d_externalSample = Button(~x3dView, Rect(370,22,90,22))
+	~x3d_externalSample = Button(~x3dView, Rect(390,22,90,20))
 	.states_([["Internal src",Color.black,Color.white],
 		["External src",Color.black,Color.red]]);
-	~x3d_chansetup = Button(~x3dView,Rect(470,22,90,22))
+	~x3d_chansetup = Button(~x3dView,Rect(490,22,90,20))
 	.states_([
 		["Stereo Out",Color.black,Color.gray],
 		["4 Channel",Color.black,Color.gray]])
@@ -365,6 +370,20 @@ s.meter;
 		if (me.value==0){~setup=2; ~sliderDelay=0};
 		if (me.value==1){~setup=4; ~sliderDelay=1};
 	});
+
+	~x3d_delay_control_button = Button(~x3dView, Rect(390,52,90,20))
+	.states_([["Weel 2 delay",Color.black,Color.white],
+		["Weel 2 pointer",Color.black,Color.red]])
+	.action_({|me|
+		case
+		{me.value==0} { ~sliderDelay = 0 }
+		{me.value==1} { ~sliderDelay = 1 };
+	});
+	// recording viewer - show if recording and sample number
+	~x3d_rec_viewer = StaticText(~x3dView, Rect(400,160,170,30))
+	.string_(~x3d_rec_string)
+	.backColor_(Color.white)
+	.align_(\center);
 	// load the default sample file of x3dlooper
 	~x3d_soundFile = SoundFile.new;
 	~x3d_soundFile.openRead(~currentFile.standardizePath);
@@ -372,19 +391,6 @@ s.meter;
 	~x3d_fileView.read(0, ~x3d_soundFile.numFrames);     // read in the entire file.
 	~x3d_fileView.refresh;                  // refresh to display the file.
 	~x3d_fileView.timeCursorPosition_(~x3d_soundFile.numFrames/2);
-	//// control bus to store cursor values
-/*	~x3d_state = Button(~w1, Rect(10,210,60,20))
-	.states_([["INACTIVE",Color.white,Color.gray],["ACTIVE",Color.green,Color.black]]);
-	~x3d_state = Button(~w1, Rect(10,210,60,20))
-*/
-	//// Synth that writes on control bus - It should be stopped and restarted when soundFile changes
-/*
-	~cursorPlay = {
-		var cursorVal;
-		cursorVal = MouseX.kr(0, ~x3d_soundFile.numFrames);
-		Out.kr(~cursorBus, cursorVal)
-	}.play;
-*/
 	//// Infinite Routine Coninuous update the cursor position in file viewer
 	{
 		inf.do{
@@ -405,14 +411,6 @@ s.meter;
 		~x3d_fileView.read(0, ~x3d_soundFile.numFrames);     // read in the entire file.
 		~x3d_fileView.refresh;                  // refresh to display the file.
 		~x3d_fileView.timeCursorPosition_(~x3d_soundFile.numFrames/2);
-/*
-		~cursorPlay = {
-			var cursorVal;
-			cursorVal = MouseX.kr(0, ~x3d_soundFile.numFrames);
-			Out.kr(~cursorBus, cursorVal)
-		}.play;
-*/
-
 
 	};
 
@@ -452,6 +450,7 @@ s.meter;
 	~tapTempo_text = StaticText.new(~tapTempo_view, Rect(320, 50, 200, 30))
     .string_("No tempo")
     .font_(Font("Monaco", 15));
+
 
 };
 

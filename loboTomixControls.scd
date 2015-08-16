@@ -11,7 +11,8 @@ s.meter
 ~greenGlitch.value;
 ~rumbledrone.value;
 ~dur = 180; // define note duration in seconds for ~rumbledrone
-~dur = 30; // default
+~dur = 10; // default
+~dur = 4; // durata per duel
 ////////////////////////////////////////////
 /////////// L O O P E R ///////////////////
 

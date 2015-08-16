@@ -6,3 +6,5 @@
 
 ~ticGaber = SoundFile.collectIntoBuffers("/Volumes/ssdData/soundsAndSamples/tic_gaber/*".standardizePath);
 ~mwvoices900 = SoundFile.collectIntoBuffers("/Volumes/ssdData/soundsAndSamples/900-marghera-workers-voices/*".standardizePath);
+
+~tzunami = SoundFile.collectIntoBuffers("/Volumes/ssdData/soundsAndSamples/tzunami/*".standardizePath);

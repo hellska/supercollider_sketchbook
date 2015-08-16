@@ -35,6 +35,7 @@ if ( File.exists(~currentFolder.standardizePath) )
 // ~fxBus = Bus.audio(s, 2);
 ~pitchBus = Bus.audio(s, 4);
 ~delayBus = Bus.audio(s, 4);
+~compBus = Bus.audio(s, 4);
 ~fxCount = 0;
 ~inputVol = 0.9;
 ~maxDelTime = 4;
@@ -59,7 +60,7 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~setup = 2;
 // defines slider control
 // if = 0 slider controls delay time, if 0 1 slider controls sample position (used in 4 channel layout)
-// ~sliderDelay = 0;
+// ~sliderDelay = 1;
 ~sliderDelay = 0;
 ////////////////////////////////////
 // SynthDef Definition - \soundinMono, \rec, \play, \play4, \picthShifter, \deldelay \mixer
@@ -110,6 +111,16 @@ SynthDef(\deldelay, {|inBus, outBus, repeat = 15, maxDelTime = 4, delaytime|
 	source = In.ar(inBus, 4);
 	out = source + CombC.ar(source,maxdelaytime: maxDelTime, delaytime: delaytime,decaytime: delaytime * repeat);
 	Out.ar(outBus, out)
+}).send(s);
+// compressor
+SynthDef(\compressor, {
+	|inbus,
+	outbus = 0,
+	thresh = 1|
+	var source, out;
+	source = In.ar(inbus, 4);
+	out = Compander.ar(source, source, thresh, 1, 0.5, 0.002, 0.01);
+	Out.ar(outbus, out)
 }).send(s);
 // Otput Mixer for Al Samples
 SynthDef.new(\mixer, {|inBus, outBus = 0|
@@ -186,11 +197,16 @@ OSCdef(\rec, {|msg, time, addr, port|
 	if (msg[1]==1){
 		~recFile = ~stdHeader++~currentRecNo++"."++~ext;
 		~rec.value(~recFile, ~currentInputSource);
+		// set GUI
+		~x3d_rec_string = "R E C O R D I N G => "++~currentRecNo;
+		{ ~x3d_rec_viewer.backColor_(Color.red).string_(~x3d_rec_string) }.defer;
 		("Recording sample: "++~recFile).postln;
 		} {
 		~stop.value();
 		("Stop Recording sample: "++~recFile).postln;
 		if (~currentRecNo<6) { ~currentRecNo = ~currentRecNo + 1 } { ~currentRecNo = 1 };
+		~x3d_rec_string = "R E C O R D E D => "++~currentRecNo;
+		{ ~x3d_rec_viewer.backColor_(Color.white).string_(~x3d_rec_string) }.defer;
 	};
 	},
 	'/jXcontrol/2'
@@ -340,8 +356,8 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 			[\inBus, ~pitchBus, \pshift, 2.3, \outBus, ~mute],~efxGroup, addAction: \addToHead);
 		~delay = Synth.new(\deldelay,
 			[\inBus, ~delayBus, \outBus, ~mute, \delaytime, 0.2],~efxGroup,addAction: \addToTail);
-		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut],~sampleGroup, addAction: \addToTail);
-//		~fxmixer = Synth.new(\mixer, [\inBus, ~sampleOut],~sampleGroup, addAction: \addToTail);
+		~compressor = Synth(\compressor, [\inbus, ~compBus], ~efxGroup, \addToTail);
+		~mixer = Synth.new(\mixer, [\inBus, ~sampleOut, \outBus, ~compBus],~sampleGroup, addAction: \addToTail);
 		~startup = false;
 		~pitchshifter.map(\pshift, ~pitchRatio);
 //		~fxCount = 0;
@@ -350,7 +366,7 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 			if (~fx1 == 1) {
 				~fxCount = ~fxCount - 1;
 				if (~fx2 == 0) {
-					~mixer.set(\outBus, 0);
+					~mixer.set(\outBus, ~compBus);
 				} {
 					~mixer.set(\outBus, ~delayBus);
 				};
@@ -365,7 +381,7 @@ OSCdef(\selsample6, {|msg, time, addr, port|
 //				~mixer.set(\inBus, ~fxBus);
 				~mixer.set(\outBus, ~pitchBus);
 				if (~fx2==0) {
-					~pitchshifter.set(\outBus, 0);
+					~pitchshifter.set(\outBus, ~compBus);
 				} {
 					~pitchshifter.set(\outBus, ~delayBus);
 				};
@@ -386,11 +402,11 @@ OSCdef(\fx1, {|msg, time, addr, port|
 	if (in==1) {
 		~fxCount = ~fxCount - 1;
 		if (~fx1 == 0) {
-			~mixer.set(\outBus, 0);
+			~mixer.set(\outBus, ~compBus);
 		} {
 			~mixer.set(\outBus, ~pitchBus);
 			// change pitchshifter routing here
-			~pitchshifter.set(\outBus, 0);
+			~pitchshifter.set(\outBus, ~compBus);
 		};
 		~delay.set(\outBus, ~mute);
 		"FX 2 (delay) off!".postln;
@@ -402,10 +418,10 @@ OSCdef(\fx1, {|msg, time, addr, port|
 //		~mixer.set(\inBus, ~fxBus);
 		if (~fx1==0) {
 			~mixer.set(\outBus, ~delayBus);
-			~delay.set(\outBus, 0);
+			~delay.set(\outBus, ~compBus);
 		} {
 			~pitchshifter.set(\outBus, ~delayBus);
-			~delay.set(\outBus, 0);
+			~delay.set(\outBus, ~compBus);
 		};
 		"FX 2 (delay) on!".postln;
 		~fxCount.postln;
