@@ -379,6 +379,13 @@ s.meter;
 		{me.value==0} { ~sliderDelay = 0 }
 		{me.value==1} { ~sliderDelay = 1 };
 	});
+	~x3d_loop_control_button = Button(~x3dView, Rect(490,52,90,20))
+	.states_([["NO LOOP"],["L O O P",Color.black,Color.red]])
+	.action_{|me|
+		case
+		{me.value==0} { ~loop = 0 }
+		{me.value==1} { ~loop = 1 }
+	};
 	// recording viewer - show if recording and sample number
 	~x3d_rec_viewer = StaticText(~x3dView, Rect(400,160,170,30))
 	.string_(~x3d_rec_string)

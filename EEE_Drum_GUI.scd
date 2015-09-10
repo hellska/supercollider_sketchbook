@@ -33,6 +33,9 @@ s.queryAllNodes
 			};
 			if (~recnumber==1) {
 				~recS1.set(\t_stop, 1);
+				~b2.close;
+				~b2.free;
+				~b2 = Buffer.read(s,"~/looop1".standardizePath);
 				~playS1 = Synth.new(\playS, [\whichBuf, ~b2, \lengthMul, 1, \del, 0], ~playSGroup);
 				~recS1.set(\whichBuf, ~b3);
 				~eee_loop_1.value = 1;
@@ -53,7 +56,9 @@ s.queryAllNodes
 		}
 		{me.value==1} { "recording".postln;
 			if (~recnumber==0) { ~rec.set(\t_start, 1) };
-			if (~recnumber>0) { ~recS1.set(\t_start, 1) };
+			if (~recnumber==1) {
+				~b2.write("~/looop1.aiff".standardizePath, "aiff", "int16", 0, 0, true);
+				~recS1.set(\t_start, 1) };
 		};
 	};
 	~eee_loopsViewer = CompositeView(~eee_win,Rect(500,10,700,600));
@@ -91,3 +96,4 @@ s.queryAllNodes
 };
 )
 ~makeDrumWin.value;
+s.freeAll

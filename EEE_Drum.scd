@@ -71,7 +71,8 @@ SynthDef.new(\recS, {
 	in = In.ar(inBus, 2);
 
 	//record buffer
-	RecordBuf.ar(in, whichBuf, 0, recLev, preLev, isRec, loop);
+	//RecordBuf.ar(in, whichBuf, 0, recLev, preLev, isRec, loop);
+	DiskOut.ar(whichBuf, in);
 }).store;
 
 
@@ -169,7 +170,9 @@ SynthDef.new(\playS, {
 	phs = Select.ar(sync, [Silent.ar, Phasor.ar(jumpTrig+t_jump, BufRateScale.kr(whichBuf), start, end, start)]);
 
 	//use this index to read through buffer
-	sig = BufRd.ar(2, whichBuf, phs, 1, 2);
+	//sig = BufRd.ar(2, whichBuf, phs, 1, 2);
+	sig = PlayBuf.ar(2, whichBuf, loop: 1, doneAction: 2);
+
 
 	//apply delay time
 	//del=1 means delay by one measure

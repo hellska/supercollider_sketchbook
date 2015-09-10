@@ -58,6 +58,7 @@ if ( File.exists(~currentFolder.standardizePath) )
 //// define setup 2 or 4 speakers
 // ~setup=2 // default
 ~setup = 2;
+~loop = 0;
 // defines slider control
 // if = 0 slider controls delay time, if 0 1 slider controls sample position (used in 4 channel layout)
 // ~sliderDelay = 1;
@@ -162,12 +163,20 @@ SynthDef.new(\granulaSample, {
 	r.close;
 	r.free;
 };
+~play_array = Array.new(25);
+~play_array_element = 0;
 ~play = {|buffer, startPos|
 	if (~setup==2){
-		Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut],~sampleGroup, addAction: \addToHead);
+		if (~loop==1) { // behaviour when loop is set
+		~play_array.add(Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead));
+		~play_array_element = ~play_array_element + 1;
+		"added new element".postln;
+		} { // behaviour when loop is switched off
+			Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead);
+		};
 	};
 	if (~setup==4){
-		Synth.new(\play4, [\bufnum, buffer, \start, startPos, \xpos, ~panpot, \ypos, ~panpotY, \outBus, ~sampleOut],~sampleGroup, addAction: \addToHead);
+		Synth.new(\play4, [\bufnum, buffer, \start, startPos, \xpos, ~panpot, \ypos, ~panpotY, \outBus, ~sampleOut,\loop, ~loop],~sampleGroup, addAction: \addToHead);
 	}
 };
 // end of Synth Def
