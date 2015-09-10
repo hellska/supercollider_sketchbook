@@ -163,14 +163,15 @@ SynthDef.new(\granulaSample, {
 	r.close;
 	r.free;
 };
-~play_array = Array.new(25);
+~play_array = Array.fill(25,0);
 ~play_array_element = 0;
 ~play = {|buffer, startPos|
 	if (~setup==2){
 		if (~loop==1) { // behaviour when loop is set
-		~play_array.add(Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead));
-		~play_array_element = ~play_array_element + 1;
-		"added new element".postln;
+			~play_array.put(~play_array_element,Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead));
+			{ ~x3d_loop_buttons_array[~play_array_element].value_(1);
+			~play_array_element = ~play_array_element + 1; }.defer;
+			"added new element".postln;
 		} { // behaviour when loop is switched off
 			Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead);
 		};
