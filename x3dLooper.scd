@@ -168,10 +168,14 @@ SynthDef.new(\granulaSample, {
 ~play = {|buffer, startPos|
 	if (~setup==2){
 		if (~loop==1) { // behaviour when loop is set
-			~play_array.put(~play_array_element,Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead));
-			{ ~x3d_loop_buttons_array[~play_array_element].value_(1);
-			~play_array_element = ~play_array_element + 1; }.defer;
-			"added new element".postln;
+			if (~play_array_element<~x3d_loop_number) {
+				~play_array.put(~play_array_element,Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead));
+				{ ~x3d_loop_buttons_array[~play_array_element].value_(1);
+					~play_array_element = ~play_array_element + 1; }.defer;
+				"added new element".postln;
+			} {
+				"No other loop permitted!".postln;
+			};
 		} { // behaviour when loop is switched off
 			Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead);
 		};
@@ -451,7 +455,13 @@ OSCdef(\fx3, {|msg, time, addr, port|
 	// ~sampleSelection.value(~currentSampleNo);
 	// add grainBuf here
 	// insert a gentle fade out when switch off the instrument
-
+	if (~loop==0) {
+		~loop = 1;
+		{ ~x3d_loop_control_button.value_(1) }.defer;
+	} {
+		~loop = 0;
+		{ ~x3d_loop_control_button.value_(0) }.defer;
+	};
 }, '/jXcontrol/fx3');
 // fourth fx
 OSCdef(\fx4, {|msg, time, addr, port|
