@@ -33,7 +33,7 @@
 
 	~x3d_loops_killall = Button(~x3d_loop_viewer_win, Rect(10,ywin + 10,xwin - 20,30))
 	.states_([[" K I L L   A L L   L O O P S "]])
-	.action_{|me| ~play_array_element.do{|el|
+	.action_{|me| ~x3d_loop_number.do{|el|
 		~play_array[el].free;
 		{ ~x3d_loop_buttons_array[el].value_(0) }.defer;
 		};
