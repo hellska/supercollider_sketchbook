@@ -2,6 +2,7 @@
 MIDIClient.init;
 MIDIClient.sources;
 MIDIIn.connect(0, MIDIClient.sources[2]); MIDIClient.sources[2];
+MIDIIn.connect(0, MIDIClient.sources[1]);
 
 (
 SynthDef(\killerLoop, {|outbus=0, amp=1, gate=1, nota=60, notb=64, notc=67, control=1|
@@ -13,7 +14,7 @@ SynthDef(\killerLoop, {|outbus=0, amp=1, gate=1, nota=60, notb=64, notc=67, cont
 	var source = AY.ar(Vibrato.kr(freqa, 0.01), Vibrato.kr(freqb, 0.03), Vibrato.kr(freqc, 0.06), control:control);
 	var out = source * env;
 	Out.ar(outbus, out)
-}).send(s);
+}).send(s)
 )
 
 (
@@ -23,7 +24,8 @@ SynthDef(\killerLoop, {|outbus=0, amp=1, gate=1, nota=60, notb=64, notc=67, cont
 //	vel.postln;
 //	noise.postln;
 	~killernotes[num] =  Synth(\killerLoop, [\nota, num, \noise, noise])};
-~note_off = {arg src, chan, num, vel; num.postln;
+~note_off = {arg src, chan, num, vel;
+	//num.postln;
 	~killernotes[num].set(\gate, 0);}
 )
 
@@ -40,4 +42,5 @@ MIDIIn.removeFuncFrom(\noteOff, ~note_off);
 
 ~killerLoop = Synth(\killerLoop);
 ~killerLoop.set(\gate, 0);
+
 
