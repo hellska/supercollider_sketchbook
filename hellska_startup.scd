@@ -1,7 +1,7 @@
 // 1
 ~lobotomix_startup = {
 	var basepath;
-	basepath="/Volumes/datadisk/hellska/supercollider_sketchbook/";
+	basepath="/home/hellska/git-repos/supercollider_sketchbook/";
 	// joystick controlled looper - OSC messages managed by junXion (STEIM software)
 	(basepath++"x3dLooper.scd").standardizePath.load;
 	// synth definition
