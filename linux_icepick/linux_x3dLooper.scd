@@ -105,10 +105,10 @@ SynthDef(\play4, {| outBus = 0, bufnum, start = 0, loop = 0, xpos = 0, ypos = 0 
     Out.ar(outBus, out)
 }).send(s);
 // Very simple Pitch Shifter
-SynthDef.new(\picthShifter, {|inBus, outBus, pshift, pRndVar = 0, trndVar = 0|
+SynthDef.new(\picthShifter, {|inBus, outBus, pshift, minshift = 0.02, maxshift = 2.5, pRndVar = 0, trndVar = 0|
 	var source, out;
 	source = In.ar(inBus, 4);
-	out = PitchShift.ar(source, 0.2, pshift, pRndVar, trndVar);
+	out = PitchShift.ar(source, 0.2, pshift * maxshift + minshift, pRndVar, trndVar);
 	Out.ar(outBus, out)
 }).send(s);
 SynthDef(\deldelay, {|inBus, outBus, repeat = 15, maxDelTime = 4, delaytime|

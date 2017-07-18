@@ -87,13 +87,14 @@ j.slots[3].at(6).action_{|v|
 		~delTime.set(v.value * ~maxDelTime + 0.02);
 	} {
 		~startPos = (v.value * ~playBuff.numFrames).floor.asInt;
-		// ~cursorBus.set(v.value);
+		~cursorBus.set(v.value);
 	}
 };
 // set cursor position and front/back panpot with Y axis
 j.slots[3].at(1).action_{|v|
 	if (~sliderDelay==0){
 		~startPos = (v.value * ~playBuff.numFrames).floor.asInt;
+		~cursorBus.set(v.value);
 	};
 	~panpotY = (v.value * 2 - 1) * - 1; // change range -1/1
 };
