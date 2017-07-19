@@ -236,10 +236,10 @@ OSCdef(\inputSource, {|msg, time, addr, port|
 		~currentFile = "~/x3dLooper/x3dL_default.wav";
 		("SAMPLE NOT RECORDED YET! Selected default file: "++~currentFile).postln;
 	};
-	~playBuff = Buffer.read(s, ~currentFile.standardizePath);
+	~playBuff = Buffer.read(s, ~currentFile.standardizePath).normalize(0.25);
 	~currentSampleNo = sampleNo;
 	// show waveshape in lobotomixGUI file viewer
-	// { ~x3d_updateSoundFile.value(~currentFile.standardizePath) }.defer;
+	{ ~x3d_updateSoundFile.value(~currentFile.standardizePath) }.defer;
 };
 
 // perform startup on first clik and fx 1 on/off

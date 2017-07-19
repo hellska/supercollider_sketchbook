@@ -19,16 +19,14 @@ s.meter;
 		~ticView.items_(~ticItems)
 	});
 };
-// Set the main window
+// create the main window
 ~loboMain = Window("Lobotomix Controls").setTopLeftBounds(Rect(600,0,840,900)).front ;
+// main volume import
 ~mainVol = s.volume.gui(~loboMain);
-
-
-
+// synth selection frame
 ~synth_list = TextField(~loboMain, Rect(80,10,50,22)).focus(true) ;
 //v.align_(\center);
-~synth_active = TextField(~loboMain, Rect(135,10,220,22))
-.string_("Select a Synth");
+~synth_active = TextField(~loboMain, Rect(135,10,220,22)).string_("Select a Synth");
 // keyboard input
 ~synth_list.keyDownAction_{|i, char|
 	char.switch(
@@ -47,10 +45,10 @@ s.meter;
 ~ticLabel = StaticText(~loboMain, Rect(80, 42, 300, 22))
 .string_("Lista files in ~Drumkit Buffer");
 ~ticView = ListView(~loboMain,Rect(80,60,600,100))
-    .items_( ~ticItems )
-    .background_(Color.white)
-    .hiliteColor_(Color.green(alpha:0.6))
-    .action_({ arg sbs;
+.items_( ~ticItems )
+.background_(Color.white)
+.hiliteColor_(Color.green(alpha:0.6))
+.action_({ arg sbs;
 	// [sbs.value, ~ticView.items[sbs.value]].postln; // .value returns the integer
 	~info = ~fileInfo.value(sbs.value, ~lobo_CurrentSoundFileList);
 	~ticInfo.string = ~info;
@@ -70,24 +68,23 @@ s.meter;
 	}
 });
 // populate the list with the default soundFile buffer
-~setListViewContent.value(~bufDrumkit);
-~lobo_CurrentSoundFileList = ~bufDrumkit;
+~setListViewContent.value(~lobo_CurrentSoundFileList);
 //// List the available sound file lists
 ~lobo_Popup = PopUpMenu(~loboMain, Rect(280, 38, 150, 22))
-.items_(["Drum kit", "Tic Gaber", "900 voices", "Tzunami"])
+.items_(["He Was Bad", "Duel", "Irregular", "Dark prayer"])
 .action_({|me| me.value.postln;
 	switch (me.value,
-		0, { ~setListViewContent.value(~bufDrumkit);
-			~lobo_CurrentSoundFileList = ~bufDrumkit;
+		0, { ~setListViewContent.value(~he_was_bad);
+			~lobo_CurrentSoundFileList = ~he_was_bad;
 		},
-		1, { ~setListViewContent.value(~ticGaber);
-			~lobo_CurrentSoundFileList = ~ticGaber;
+		1, { ~setListViewContent.value(~duel);
+			~lobo_CurrentSoundFileList = ~duel;
 		},
-		2, { ~setListViewContent.value(~mwvoices900);
-			~lobo_CurrentSoundFileList = ~mwvoices900;
+		2, {  ~setListViewContent.value(~irregular);
+			~lobo_CurrentSoundFileList = ~irregular;
 		},
-		3, {  ~setListViewContent.value(~tzunami);
-			~lobo_CurrentSoundFileList = ~tzunami;
+		3, {  ~setListViewContent.value(~dark_prayer);
+			~lobo_CurrentSoundFileList = ~dark_prayer;
 		}
 	);
 });

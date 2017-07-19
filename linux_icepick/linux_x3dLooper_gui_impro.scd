@@ -70,8 +70,8 @@ s.meter;
 	}
 });
 // populate the list with the default soundFile buffer
-~setListViewContent.value(~bufDrumkit);
-~lobo_CurrentSoundFileList = ~bufDrumkit;
+~setListViewContent.value(~lobo_CurrentSoundFileList);
+//~lobo_CurrentSoundFileList = ~lobo_CurrentSoundFileList;
 //// List the available sound file lists
 ~lobo_Popup = PopUpMenu(~loboMain, Rect(280, 38, 150, 22))
 .items_(["Drum kit", "Tic Gaber", "900 voices", "Tzunami"])
