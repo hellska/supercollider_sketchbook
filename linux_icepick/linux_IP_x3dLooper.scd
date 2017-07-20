@@ -8,6 +8,7 @@
 // first of all load all needed Bus and variables [[[ONLY ONCE]]]
 (
 ///////// Global Variables
+~currentFolderName = "date +\"%Y%m%d\"".unixCmdGetStdOutLines;
 ~currentFolder = "date +\"%Y%m%d\"".unixCmdGetStdOutLines;
 ~currentFolder = "~/soundAndSamples/samples/x3dLooper/"++~currentFolder[0]++"/";
 ~recFile = ~currentFolder++"x3dL_1.wav";

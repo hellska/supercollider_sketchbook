@@ -20,7 +20,7 @@ s.meter;
 	});
 };
 // create the main window
-~loboMain = Window("Lobotomix Controls").setTopLeftBounds(Rect(600,0,840,900)).front ;
+~loboMain = Window("ICE PICK Performance Patch").setTopLeftBounds(Rect(640,0,700,640)).front ;
 // main volume import
 ~mainVol = s.volume.gui(~loboMain);
 // synth selection frame
@@ -41,6 +41,23 @@ s.meter;
 	);
 	~synth_list.string = ""
 };
+
+// change recording folder
+~score_sample_folder = TextField(~loboMain,Rect(375,10,130,22))
+.value_(~currentFolderName);
+~score_samplef_button = Button(~loboMain, Rect(515,10,110,22))
+.states_([["load folder",Color.black,Color.red]])
+.action_({|me|
+	var path;
+	path = "~/x3dLooper/"++~score_sample_folder.value;
+	// ~load_folder.value(~score_sample_folder.value,"aiff");
+	//		me.value.postln();
+	~score_sample_folder.value.postln;
+	File.exists(path.standardizePath).if({
+		~changeFolder.value(~score_sample_folder.value,"aiff")
+		}
+		, { "folder does not exists!".postln });
+});
 //c = ListView(w, rect(5, 30, 50, 22)).items_(["1", "s", "e"]);
 ~ticLabel = StaticText(~loboMain, Rect(80, 42, 300, 22))
 .string_("Lista files in ~Drumkit Buffer");
@@ -113,7 +130,7 @@ s.meter;
 
 	~x3d_rec_string = "N O T  R E C O R D I N G";
 
-	~x3dView = CompositeView(parent, Rect(80,380,600,200)).background_(Color.new255);
+	~x3dView = CompositeView(parent, Rect(80,280,600,200)).background_(Color.new255);
 	~x3d_Label = StaticText(~x3dView, Rect(10,0,150,22))
 	.string_(title)
 	.stringColor_(Color.red);
@@ -188,7 +205,7 @@ s.meter;
 
 //// tap tempo GUI
 ~tapTempoGuiCreator = {|title,parent|
-	~tapTempo_view = CompositeView(parent, Rect(80,590,600,130)); //.background_(Color.red);
+	~tapTempo_view = CompositeView(parent, Rect(80,490,600,130)); //.background_(Color.red);
 
 	~lastTap = nil;
 	~tapTempo = {
@@ -221,76 +238,6 @@ s.meter;
     .font_(Font("Monaco", 15));
 
 
-};
-
-~lobo_score = {|title, parent, pcolor|
-	~score_main = CompositeView(parent,Rect(690,60,140,700))
-	.background_(pcolor);
-	~score_label = StaticText(~score_main,Rect(10,0,130,20))
-	.string_(title)
-	.stringColor_(Color.red);
-	~score_text = TextView(~score_main,Rect(10,20,130,200))
-	.string_(title+" edit");
-/*
-	~grainAr[~synthIndex].get(\ratio, {|a| { ~nboxes[0].valueAction_(a)}.defer});
-	~grainAr[~synthIndex].get(\dur, {|a| {~nboxes[1].valueAction_(a)}.defer});
-	~grainAr[~synthIndex].get(\rate, {|a| {~nboxes[2].valueAction_(a)}.defer});
-	~grainAr[~synthIndex].get(\amp, {|a| {~vol.valueAction_(a)}.defer});
-	~grainAr[~synthIndex].get(\speed, {|au| {~grain_speed.string_(au)}.defer});
-*/
-
-	~score_getSynthValues = Button(~score_main,Rect(10,230,130,20))
-	.states_([["Get Synth Values",Color.grey,Color.black]])
-	.action_({|me|
-		{~score_text.setString(("\n"+~synthIndex),~score_text.string.size)}.defer;
-		~grainAr[~synthIndex].get(\ratio,
-			{|inget|
-				{~score_text.setString((":"+inget),~score_text.string.size)}
-				.defer
-			}
-		);
-		~grainAr[~synthIndex].get(\dur,
-		{|inget|
-				{~score_text.setString((","+inget),~score_text.string.size)}
-				.defer
-			}
-		);
-		~grainAr[~synthIndex].get(\rate,
-		{|inget|
-				{~score_text.setString((","+inget),~score_text.string.size)}
-				.defer
-			}
-		);
-		~grainAr[~synthIndex].get(\amp,
-		{|inget|
-			{~score_text.setString((","+inget),~score_text.string.size)}
-			.defer
-		}
-		);
-		~grainAr[~synthIndex].get(\speed,
-		{|inget|
-			{~score_text.setString((","+inget),~score_text.string.size)}
-			.defer
-		}
-		);
-
-
-	});
-	~score_sample_folder = TextField(~score_main,Rect(10,260,130,20))
-	.value_("000000");
-	~score_samplef_button = Button(~score_main, Rect(10,290,110,20))
-	.states_([["load folder",Color.black,Color.red]])
-	.action_({|me|
-		var path;
-		path = "~/x3dLooper/"++~score_sample_folder.value;
-		// ~load_folder.value(~score_sample_folder.value,"aiff");
-//		me.value.postln();
-		~score_sample_folder.value.postln;
-		File.exists(path.standardizePath).if({
-			~changeFolder.value(~score_sample_folder.value,"aiff")
-			}
-			, { "folder does not exists!".postln });
-	});
 };
 
 
