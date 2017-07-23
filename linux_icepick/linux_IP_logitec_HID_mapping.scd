@@ -200,5 +200,3 @@ j.slots[1].at(299).action_{|v|
 // dopo la creazione dei synth altrimenti il map non funziona
 j.slots[3].at(5).createBus(s);
 ~pitchshifter.map(\pshift, j.slots[3].at(5).bus);
-
-

@@ -95,6 +95,7 @@ SynthDef(\play, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0, attack =
 }).send(s);
 
 // 4 channels player
+/*
 SynthDef(\play4, {| outBus = 0, bufnum, start = 0, loop = 0, xpos = 0, ypos = 0 |
 	var source, out, env, envdur;
 	envdur = start / 44100 - 0.02 - 0.5;
@@ -102,6 +103,14 @@ SynthDef(\play4, {| outBus = 0, bufnum, start = 0, loop = 0, xpos = 0, ypos = 0 
 	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2) *
 	EnvGen.ar(env);
 	//out = Pan2.ar(source, panpot);
+	out = Pan4.ar(source,xpos,ypos);
+    Out.ar(outBus, out)
+}).send(s);
+*/
+SynthDef(\play4, {| outBus = 0, bufnum, start = 0, loop = 0, xpos = 0, ypos = 0, attack = 0.003, decay = 0.003, time = 0.1|
+	var source, out;
+	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2) *
+	EnvGen.kr(Env.linen(attack, time, decay));
 	out = Pan4.ar(source,xpos,ypos);
     Out.ar(outBus, out)
 }).send(s);
@@ -184,7 +193,7 @@ SynthDef.new(\granulaSample, {
 		};
 	};
 	if (~setup==4){
-		Synth.new(\play4, [\bufnum, buffer, \start, startPos, \xpos, ~panpot, \ypos, ~panpotY, \outBus, ~sampleOut,\loop, ~loop],~sampleGroup, addAction: \addToHead);
+		Synth.new(\play4, [\bufnum, buffer, \start, startPos, \xpos, ~panpot, \ypos, ~panpotY, \outBus, ~sampleOut,\loop, ~loop, \time, time],~sampleGroup, addAction: \addToHead);
 	}
 };
 

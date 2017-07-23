@@ -236,8 +236,13 @@ s.meter;
 	~tapTempo_text = StaticText.new(~tapTempo_view, Rect(320, 50, 200, 30))
     .string_("No tempo")
     .font_(Font("Monaco", 15));
-
-
+	~tapTempo_timebox = TextView.new(~tapTempo_view, Rect(320, 80, 100, 30));
+	~tapTempo_timesend = Button.new(~tapTempo_view, Rect(430, 80, 100, 30))
+	.states_([["Set DelTime"]])
+	.action_({
+		var mtime = 60 / ~tapTempo_timebox.string.asInt;
+		~delTime.set(mtime);
+		mtime.postln; });
 };
 
 
