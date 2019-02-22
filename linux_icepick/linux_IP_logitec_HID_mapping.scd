@@ -4,7 +4,7 @@ MIDIIn.connect(0, 3);
 
 GeneralHID.buildDeviceList;
 // generate the list of HID devices
-// d = GeneralHID.deviceList;
+// d = GeneralHImplD.deviceList;
 // open after manual check
 // j = GeneralHID.open(d[4]);
 // open by direct search
@@ -55,7 +55,7 @@ j.slots[3].at(5).freeMsg;
 */
 
 // check joystick input
-j.makeGui;
+//j.makeGui;
 // recording
 j.slots[1].at(289).action_{|v|
 	if (v.value==1){
@@ -164,6 +164,13 @@ j.slots[1].at(290).action_{ |v|
 		};
 	};
 };
+// switch loop on/off
+j.slots[1].at(291).action_{|v|
+	if (v.value==1) {
+		if (~loop==1) { ~loop=0; "LOOP OFF".postln } { ~loop=1; "LOOP ON!!!".postln }
+	}
+};
+
 // recorded sample selection
 j.slots[1].at(294).action_{|v|
 	if (v.value==1) {
@@ -196,7 +203,7 @@ j.slots[1].at(299).action_{|v|
 	}
 };
 // avvia i synth di default mixer, pitch shifter e delay
-~startup_func.value();
+//~startup_func.value();
 // dopo la creazione dei synth altrimenti il map non funziona
-j.slots[3].at(5).createBus(s);
-~pitchshifter.map(\pshift, j.slots[3].at(5).bus);
+//j.slots[3].at(5).createBus(s);
+//~pitchshifter.map(\pshift, j.slots[3].at(5).bus);

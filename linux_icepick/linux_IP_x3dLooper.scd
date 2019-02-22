@@ -9,15 +9,15 @@
 (
 ///////// Global Variables
 ~currentFolderName = "date +\"%Y%m%d\"".unixCmdGetStdOutLines;
-~currentFolder = "date +\"%Y%m%d\"".unixCmdGetStdOutLines;
-~currentFolder = "~/soundAndSamples/samples/x3dLooper/"++~currentFolder[0]++"/";
+//~currentFolder = "~/soundAndSamples/samples/x3dLooper/"++~currentFolder[0]++"/";
+~currentFolder = "~/soundAndSamples/samples/x3dLooper/"++~currentFolderName[0]++"/";
 ~recFile = ~currentFolder++"x3dL_1.wav";
 ~stdHeader = ~currentFolder++"x3dL_";
 ~ext = "wav";
 // check current folder and create a new one for each day session
 if ( File.exists(~currentFolder.standardizePath) )
 { ("Folder for sample record: "++~currentFolder).postln }
-{ "mkdir ~/soundAndSamples/samples/x3dLooper/`date +\"%Y%m%d\"`".unixCmd } ;
+{ var command = "mkdir "+~currentFolder; command.unixCmd } ;
 // defines wich bus are used for audio input
 ~inch1 = 0;
 ~inch2 = 6;
@@ -37,13 +37,17 @@ if ( File.exists(~currentFolder.standardizePath) )
 ~fxCount = 0;
 ~inputVol = 0.9;
 ~maxDelTime = 4;
+///////// Loop out
+~loopOut = Bus.audio(s, 4);
 ///////// Control Bus
 ~pitchRatio = Bus.control(s,1);
 ~delTime = Bus.control(s,1);
 ~cursorBus = Bus.control(s,1);
 ///////// Buffers
 ~recordBuff = Buffer.alloc(s, 65536);
-~currentFile = "~/soundAndSamples/samples/x3dLooper/x3dL_default.wav";
+//~currentFile = "~/soundAndSamples/samples/x3dLooper/x3dL_default.wav";
+~currentFile = "/Users/hellska/soundAndSamples/samples/x3dLooper/x3dL_default.wav";
+~defaultFile = ~currentFile;
 ~playBuff = Buffer.read(s, ~currentFile.standardizePath, 0);
 ///////// F Control
 ~fx1 = 0;
@@ -93,7 +97,16 @@ SynthDef(\play, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0, attack =
 	out = Pan2.ar(source, panpot);
     Out.ar(outBus, out)
 }).send(s);
-
+// loops
+SynthDef(\playLoop, {| outBus = 0, bufnum, start = 0, loop = 0, panpot = 0 |
+	var source, out, env, envdur;
+	envdur = 0.5;
+	env = Env.asr(attackTime:0.02,sustainLevel:1,releaseTime:envdur,curve:\lin);
+	source = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), 1, start, loop, doneAction:2) *
+	EnvGen.ar(env);
+	out = Pan2.ar(source,panpot);
+    Out.ar(outBus, out)
+}).send(s);
 // 4 channels player
 /*
 SynthDef(\play4, {| outBus = 0, bufnum, start = 0, loop = 0, xpos = 0, ypos = 0 |
@@ -181,7 +194,8 @@ SynthDef.new(\granulaSample, {
 	if (~setup==2){
 		if (~loop==1) { // behaviour when loop is set
 			if (~play_array_element<~x3d_loop_number) {
-				~play_array.put(~play_array_element,Synth.new(\play, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead));
+				~play_array.put(~play_array_element,Synth.new(\playLoop, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~sampleOut, \loop, ~loop],~sampleGroup, addAction: \addToHead));
+				// ~play_array.put(~play_array_element,Synth.new(\playLoop, [\bufnum, buffer, \start, startPos, \panpot, ~panpot, \outBus, ~loopOut, \loop, ~loop],~sampleGroup, addAction: \addToHead));
 				{ ~x3d_loop_buttons_array[~play_array_element].value_(1);
 					~play_array_element = ~play_array_element + 1; }.defer;
 				"added new element".postln;
@@ -232,7 +246,7 @@ OSCdef(\inputSource, {|msg, time, addr, port|
 	if (File.exists(~currentFile.standardizePath)) {
 		("Selected File: "++~currentFile).postln;
 	} {
-		~currentFile = "~/x3dLooper/x3dL_default.wav";
+		~currentFile = ~defaultFile;
 		("SAMPLE NOT RECORDED YET! Selected default file: "++~currentFile).postln;
 	};
 	~playBuff = Buffer.read(s, ~currentFile.standardizePath).normalize(0.25);
@@ -250,6 +264,7 @@ OSCdef(\inputSource, {|msg, time, addr, port|
 		[\inBus, ~delayBus, \outBus, ~mute, \delaytime, 0.2],~efxGroup,addAction: \addToTail);
 	~compressor = Synth(\compressor, [\inbus, ~compBus], ~efxGroup, \addToTail);
 	~mixer = Synth.new(\mixer, [\inBus, ~sampleOut, \outBus, ~compBus],~sampleGroup, addAction: \addToTail);
+	~loopmixer = Synth.new(\mixer, [\inBus, ~loopOut, \outBus, ~compBus],~sampleGroup, addAction: \addToTail);
 	~startup = false;
 	//~pitchshifter.map(\pshift, ~pitchRatio);
 	// mapping moved outside startup function, binded to startup execution

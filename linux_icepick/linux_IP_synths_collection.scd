@@ -24,7 +24,7 @@ SynthDef.new(\particleSin, {
 }).add;
 ///// He Was Bad
 SynthDef.new(\greenGlitch, {
-	|out = 0,
+	|outBus = 0,
 	dur = 15
 	tnoisefreq = 0.3,
 	tnoisemul = 100,
@@ -49,7 +49,7 @@ SynthDef.new(\greenGlitch, {
 	filter = RHPF.ar(in:source,freq:hpfreq,rq:0.01);
 	pan = Pan2.ar(in:filter,pos:SinOsc.kr(freq:1/dur,phase:posstart * pi));
 	rev = FreeVerb.ar(in:pan,damp:revHFdamp);
-	Out.ar(bus:out,channelsArray:rev * env)
+	Out.ar(bus:outBus,channelsArray:rev * env)
 }).send(s);
 ///// Duel - Dark Prayer
 SynthDef.new(\rumbledrone, {

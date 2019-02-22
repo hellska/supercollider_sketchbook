@@ -23,7 +23,7 @@ s.meter;
 ~loboMain = Window("ICE PICK Performance Patch").setTopLeftBounds(Rect(640,0,700,640)).front ;
 // main volume import
 ~mainVol = s.volume.gui(~loboMain);
-// synth selection frame
+// synth selection frame~
 ~synth_list = TextField(~loboMain, Rect(80,10,50,22)).focus(true) ;
 //v.align_(\center);
 ~synth_active = TextField(~loboMain, Rect(135,10,220,22)).string_("Select a Synth");
@@ -31,6 +31,7 @@ s.meter;
 ~synth_list.keyDownAction_{|i, char|
 	char.switch(
 		// the functions are in the file: midi_control_functions.scd
+		$0, { ~noSynth.value; ~synth_active.string = "NO SYNTH Selected"  },
 		$1, { ~simple.value; ~synth_active.string = "MIDI Func: ~simple"  },
 		$2, { ~rumble.value; ~synth_active.string = "MIDI Func: ~rumble" },
 		$3, { ~randomDelay.value; ~synth_active.string = "MIDI Func: ~randomDelay" },
@@ -88,7 +89,7 @@ s.meter;
 ~setListViewContent.value(~lobo_CurrentSoundFileList);
 //// List the available sound file lists
 ~lobo_Popup = PopUpMenu(~loboMain, Rect(280, 38, 150, 22))
-.items_(["He Was Bad", "Duel", "Irregular", "Dark prayer"])
+.items_(["He Was Bad", "Duel", "Irregular", "Dark prayer", "matrix_ludens", "espeak", "loops", "industrial", "berlin"])
 .action_({|me| me.value.postln;
 	switch (me.value,
 		0, { ~setListViewContent.value(~he_was_bad);
@@ -102,7 +103,25 @@ s.meter;
 		},
 		3, {  ~setListViewContent.value(~dark_prayer);
 			~lobo_CurrentSoundFileList = ~dark_prayer;
+		},
+		4, {  ~setListViewContent.value(~matrix_ludens);
+			~matrix_ludens = SoundFile.collectIntoBuffers(~bbpath++"matrix_ludens/*");
+			~lobo_CurrentSoundFileList = ~matrix_ludens;
+		},
+		5, {  ~setListViewContent.value(~espeak_out);
+			~lobo_CurrentSoundFileList = ~espeak_out;
+		},
+		6, {  ~setListViewContent.value(~loops);
+			~loops = SoundFile.collectIntoBuffers(~bbpath++"loops/*");
+			~lobo_CurrentSoundFileList = ~loops;
+		},
+		7, {  ~setListViewContent.value(~berlin);
+			~lobo_CurrentSoundFileList = ~berlin;
+		},
+		8, {  ~setListViewContent.value(~saturdaynight);
+			~lobo_CurrentSoundFileList = ~saturdaynight;
 		}
+
 	);
 });
 //// Create and populate the text view for soundfile info
