@@ -68,11 +68,11 @@ SynthDef(\imitational,{|inBus=0,gate=1|
 }).send(s)
 )
 
-~imi = Synth(\imitational);
+~imi = Synth(\imitational, [\inBus, 1]);
 ~imi.set(\gate, 0);
 
 (
-SynthDef(\imitatioDist,{|inBus=0,gate=1,bits=16,cutoff=440,dec=2|
+SynthDef(\imitatioDist,{|inBus=0,gate=1,bits=16,cutoff=440,dec=2,outBus=0|
 	var env, in, amp, freq, hasFreq, out;
 	env = EnvGen.ar(Env.asr(0.02,0.3),gate,doneAction:2);
 	   in = Mix.new(SoundIn.ar(inBus)) * env;
@@ -86,12 +86,14 @@ SynthDef(\imitatioDist,{|inBus=0,gate=1,bits=16,cutoff=440,dec=2|
 	    3.do({
 		        out = AllpassN.ar(out, 0.040, [0.040.rand,0.040.rand], dec)
 	    });
-	    Out.ar(0,out)
+	    Out.ar(outBus,out)
 }).send(s)
 )
 s.queryAllNodes;
 ~aimi = Synth(\imitatioDist);
+~aimi.set(\inBus, 1);
 ~aimi.free;
 ~aimi.set(\cutoff,5660);
+~aimi.set(\outBus, ~delayBus);
 ~aimi.set(\gate, 0);
 ~aimi.set(\dec, 5);
